@@ -1,0 +1,39 @@
+x-hardened-runtime: &hardened-runtime
+  build:
+    context: ..
+    dockerfile: Dockerfile.runtime
+  read_only: true
+  tmpfs:
+    - /tmp:rw,noexec,nosuid,nodev,size=4m
+    - /dev/shm:ro,noexec,nosuid,nodev,size=1m
+  cap_drop:
+    - ALL
+  security_opt:
+    - no-new-privileges
+  mem_limit: 128m
+  cpus: "0.5"
+  pids_limit: 32
+  ulimits:
+    nofile:
+      soft: 32
+      hard: 32
+    fsize: 1048576
+
+services:
+  sandbox-worker:
+    <<: *hardened-runtime
+    network_mode: none
+
+  egress-broker:
+    <<: *hardened-runtime
+    command: ["python3", "-m", "pricepulse.egress.broker"]
+    environment:
+      PRICEPULSE_EGRESS_POLICY: ${PRICEPULSE_EGRESS_POLICY:?set a SourcePolicy JSON object}
+    networks:
+      - egress-control
+      - egress-external
+
+networks:
+  egress-control:
+    internal: true
+  egress-external:

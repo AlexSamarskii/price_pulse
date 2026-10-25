@@ -1,0 +1,20 @@
+{
+  "source_id": "demo_shop",
+  "base_url": "https://shop.example.invalid/catalog/",
+  "allowed_hosts": [
+    "shop.example.invalid"
+  ],
+  "allowed_path_prefixes": [
+    "/catalog/",
+    "/products/"
+  ],
+  "robots_policy": "honor",
+  "max_pages": 3,
+  "requests_per_minute": 6,
+  "max_concurrency": 1,
+  "timeout_seconds": 20,
+  "allowed_currencies": [
+    "RUB"
+  ],
+  "live_enabled": false
+}

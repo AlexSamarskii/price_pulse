@@ -1,0 +1,1 @@
+"""Versioned PricePulse SQLite migrations."""

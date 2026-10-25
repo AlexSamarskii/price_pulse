@@ -1,0 +1,358 @@
+{
+  "repository": "https://github.com/YunyiFlux/ScrapeClaw",
+  "commit": "4e0ed78478db38c1173610b39dba573dcf46bd77",
+  "retrieved_at_utc": "2026-10-24T22:28:31.149689+00:00",
+  "archive_sha256": "a8454237db43f462ff45249db1c514b2eb57a7f1a4d37d0194d1259863ec9762",
+  "license": "MIT",
+  "files": [
+    {
+      "upstream_path": ".gitignore",
+      "path": ".gitignore",
+      "sha256": "0d898cf2f8a26e3c0630d9c2582ea0d0b62597bd22197212a4aca683b7c965c1"
+    },
+    {
+      "upstream_path": "LICENSE",
+      "path": "LICENSE",
+      "sha256": "c75144442e51851c6c7f8854d01ca8ca8939921be18b54f0aff20e21f05eab9d"
+    },
+    {
+      "upstream_path": "README.md",
+      "path": "docs/upstream/README.md",
+      "sha256": "378497db0039fbdcf586a5b8df3ba82f54fefab337fff75aaea4c519e0963b19"
+    },
+    {
+      "upstream_path": "README_CN.md",
+      "path": "docs/upstream/README_CN.md",
+      "sha256": "549480c802ff59654ed8587710d7c6ef433b1a3dc672d1fbb2ec529a00c3c0a3"
+    },
+    {
+      "upstream_path": "config.example.yaml",
+      "path": "config.example.yaml",
+      "sha256": "cba3f2fb64470fb6c0749e07a559e3800d30851b5368a01def727aae65e4dede"
+    },
+    {
+      "upstream_path": "pyproject.toml",
+      "path": "pyproject.toml",
+      "sha256": "01e795f5747c7ced46ed415e57997f9c5065c537a53a09040ca9df198e1e9e3a"
+    },
+    {
+      "upstream_path": "scrapeclaw/__init__.py",
+      "path": "scrapeclaw/__init__.py",
+      "sha256": "c54f83f4acff60171a9d816a3f66b1fc81cda9272740f465f7abb7d89e8a55f1"
+    },
+    {
+      "upstream_path": "scrapeclaw/__main__.py",
+      "path": "scrapeclaw/__main__.py",
+      "sha256": "a24c21b1d3216cf209663c87c8e6d9695d144f95bdf8fb098cd4b32bee6d2566"
+    },
+    {
+      "upstream_path": "scrapeclaw/analyzer/__init__.py",
+      "path": "scrapeclaw/analyzer/__init__.py",
+      "sha256": "a16b33940d534b76df98bd35712c236dc93ae105d926622a19da28f1299495c6"
+    },
+    {
+      "upstream_path": "scrapeclaw/analyzer/diff_probe.py",
+      "path": "scrapeclaw/analyzer/diff_probe.py",
+      "sha256": "982e3d4a15f04a0c004091110c7a868d8cfdf0b97e57c9b2627eacf9836bcd2f"
+    },
+    {
+      "upstream_path": "scrapeclaw/analyzer/distiller.py",
+      "path": "scrapeclaw/analyzer/distiller.py",
+      "sha256": "e50ebe96e4717fb66da8f92a77c624544bcc9d1bf9d9108eb12c072fb9b87077"
+    },
+    {
+      "upstream_path": "scrapeclaw/analyzer/dom_nav_sniffer.py",
+      "path": "scrapeclaw/analyzer/dom_nav_sniffer.py",
+      "sha256": "1212898b31627dd1701154a9d3e3e5d245ba684bf5c138b280a431dc73fabbbf"
+    },
+    {
+      "upstream_path": "scrapeclaw/analyzer/goal_parser.py",
+      "path": "scrapeclaw/analyzer/goal_parser.py",
+      "sha256": "d55692ddb922434fc440faf42105defe045c8ef7c1497b6584c853642fc7e582"
+    },
+    {
+      "upstream_path": "scrapeclaw/analyzer/pagination.py",
+      "path": "scrapeclaw/analyzer/pagination.py",
+      "sha256": "8a557e7cbe433bc9791007ca666e7aa12e69a2f7d0ce49fe73328c4625906464"
+    },
+    {
+      "upstream_path": "scrapeclaw/analyzer/signature_sniffer.py",
+      "path": "scrapeclaw/analyzer/signature_sniffer.py",
+      "sha256": "35b9aec6c263a832c1e73baf6ef22ef81d6e49a660e4d08f20a8c0e8210ccdee"
+    },
+    {
+      "upstream_path": "scrapeclaw/api.py",
+      "path": "scrapeclaw/api.py",
+      "sha256": "f07fd9b97d382fa32020d294f365174d288ad9cda15759c9fcab48876f3131da"
+    },
+    {
+      "upstream_path": "scrapeclaw/benchmark/__init__.py",
+      "path": "scrapeclaw/benchmark/__init__.py",
+      "sha256": "0a148ad896deb195566824f8b04af48fb10f0ad2d77a3abd59edc9fc260cc022"
+    },
+    {
+      "upstream_path": "scrapeclaw/benchmark/dataset.py",
+      "path": "scrapeclaw/benchmark/dataset.py",
+      "sha256": "5d840633ed61ab92f4f99e2a7903a15a96e89164ba343324681b53bd497b1355"
+    },
+    {
+      "upstream_path": "scrapeclaw/benchmark/harness.py",
+      "path": "scrapeclaw/benchmark/harness.py",
+      "sha256": "ddc335125f075bd62b536aa8e58974bf4e342d6b8cdaa4ee21aba6086d4e4337"
+    },
+    {
+      "upstream_path": "scrapeclaw/benchmark/models.py",
+      "path": "scrapeclaw/benchmark/models.py",
+      "sha256": "daddadd91c299a139db17aa87eddd1226a6cbc5f1b621300d24409a3dbe24aa1"
+    },
+    {
+      "upstream_path": "scrapeclaw/benchmark/server.py",
+      "path": "scrapeclaw/benchmark/server.py",
+      "sha256": "2340e82a4a293a5eec9ee7223fe0af8d03f61cd044d35ba4e2ab958dada52581"
+    },
+    {
+      "upstream_path": "scrapeclaw/cli/__init__.py",
+      "path": "scrapeclaw/cli/__init__.py",
+      "sha256": "a16b33940d534b76df98bd35712c236dc93ae105d926622a19da28f1299495c6"
+    },
+    {
+      "upstream_path": "scrapeclaw/cli/main.py",
+      "path": "scrapeclaw/cli/main.py",
+      "sha256": "e05eb925224f38b00d3afb49b9003c9c18cdbad7cfa3ce04263be609a6522e13"
+    },
+    {
+      "upstream_path": "scrapeclaw/cli/wizard.py",
+      "path": "scrapeclaw/cli/wizard.py",
+      "sha256": "300983ac8b582bafacd11936fe643512f4d49b2b5af9edc79c0f79c09c1ae367"
+    },
+    {
+      "upstream_path": "scrapeclaw/config/__init__.py",
+      "path": "scrapeclaw/config/__init__.py",
+      "sha256": "a16b33940d534b76df98bd35712c236dc93ae105d926622a19da28f1299495c6"
+    },
+    {
+      "upstream_path": "scrapeclaw/config/schema.py",
+      "path": "scrapeclaw/config/schema.py",
+      "sha256": "aaec0168bb9efd6b70d0dc55c82043caae127eadec42546d537749580b765a0b"
+    },
+    {
+      "upstream_path": "scrapeclaw/config/settings.py",
+      "path": "scrapeclaw/config/settings.py",
+      "sha256": "3fc3971f614ce8fd4101f511451f8fbdb307c71b839d2e0dab815c0974093c53"
+    },
+    {
+      "upstream_path": "scrapeclaw/core/__init__.py",
+      "path": "scrapeclaw/core/__init__.py",
+      "sha256": "4c349782b2a0c75559a96b8603357a3f6d5cceb2e184d5b6b8d142af7cb6c2e8"
+    },
+    {
+      "upstream_path": "scrapeclaw/core/goal_spec.py",
+      "path": "scrapeclaw/core/goal_spec.py",
+      "sha256": "aea135916f5b614a427c15c66640807f4bb2ea0e4d3e1b3038b446d8d142560b"
+    },
+    {
+      "upstream_path": "scrapeclaw/crypto/__init__.py",
+      "path": "scrapeclaw/crypto/__init__.py",
+      "sha256": "d5ed484c3580fcdf96143792721d43e732989cbc557bfc4ccf693cf32bc21121"
+    },
+    {
+      "upstream_path": "scrapeclaw/crypto/browser_rpc.py",
+      "path": "scrapeclaw/crypto/browser_rpc.py",
+      "sha256": "eb8544e7bc7df0d822cf50ada44dcb36566f852774e51c0127189cb3e12bc878"
+    },
+    {
+      "upstream_path": "scrapeclaw/crypto/js_hooker.py",
+      "path": "scrapeclaw/crypto/js_hooker.py",
+      "sha256": "519c4606f48cef7d9edec01df8e8cb4a3b0dded68682f807ce65703a5f10c8b2"
+    },
+    {
+      "upstream_path": "scrapeclaw/crypto/js_runner.py",
+      "path": "scrapeclaw/crypto/js_runner.py",
+      "sha256": "a63eb89bb2968adeb60eedb1bb4214dc9c7b264591d021f142544c47544f0422"
+    },
+    {
+      "upstream_path": "scrapeclaw/docs_tools.py",
+      "path": "scrapeclaw/docs_tools.py",
+      "sha256": "0a3c38fddd8d07adc8570c0dcad805f408325ebdfa6e8b54570582064f96879e"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/__init__.py",
+      "path": "scrapeclaw/engine/__init__.py",
+      "sha256": "a16b33940d534b76df98bd35712c236dc93ae105d926622a19da28f1299495c6"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/agent_state.py",
+      "path": "scrapeclaw/engine/agent_state.py",
+      "sha256": "cb456fdc22b113f60da923de6d15042e098d85add0626dcfea74e18659419f34"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/constraint_policy.py",
+      "path": "scrapeclaw/engine/constraint_policy.py",
+      "sha256": "cbe81b39ab843cdb41899396d8bd507bfd9791cca5a90335c136808a7fb9cc03"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/correction_layer.py",
+      "path": "scrapeclaw/engine/correction_layer.py",
+      "sha256": "0acff7496f97f6457d25fb6cb0eab254c88b356402d20fdfd4970b890d7bedfd"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/llm_client.py",
+      "path": "scrapeclaw/engine/llm_client.py",
+      "sha256": "7a44e1100bbf8e15a1b3a28e16a9d7216db50e26f8a598367c79be465d3684ef"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/planner.py",
+      "path": "scrapeclaw/engine/planner.py",
+      "sha256": "f0eb1a9058fe3d989a4013954d9b3fc13d187e50b597c52111d3f1ee296039ce"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/prompts.py",
+      "path": "scrapeclaw/engine/prompts.py",
+      "sha256": "920ea2bc735c28c9a89bdc540744c86297a33d30a87a45f927e02c0f8d1352ca"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/scope_guard.py",
+      "path": "scrapeclaw/engine/scope_guard.py",
+      "sha256": "0a7a6f03cab871c41e122461b9b9efa284a5a1089d2abbc34938b636207988ed"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/solver.py",
+      "path": "scrapeclaw/engine/solver.py",
+      "sha256": "490eef7b219a2a1e1bd108d237eface1e86f8a13847c5e7b4e5927823c140dab"
+    },
+    {
+      "upstream_path": "scrapeclaw/engine/tool_manager.py",
+      "path": "scrapeclaw/engine/tool_manager.py",
+      "sha256": "fc027fae90f4e37ea43036478bfd8c8b883365f2a9ed807b202a9a49ef8554d5"
+    },
+    {
+      "upstream_path": "scrapeclaw/exceptions.py",
+      "path": "scrapeclaw/exceptions.py",
+      "sha256": "5a6f5f4c70f2001627d0aa9c1d179ff8f573b544af5b6c4787e55cf19d46cdcc"
+    },
+    {
+      "upstream_path": "scrapeclaw/exporter/__init__.py",
+      "path": "scrapeclaw/exporter/__init__.py",
+      "sha256": "7c73d01cec926b4b9418d50167a45796aba327590bcc732e781a6eb82f7b1e21"
+    },
+    {
+      "upstream_path": "scrapeclaw/exporter/base.py",
+      "path": "scrapeclaw/exporter/base.py",
+      "sha256": "054a005f8bc769b61179269a21740d1d56d38132b2140b2d6d574aa261537c0c"
+    },
+    {
+      "upstream_path": "scrapeclaw/exporter/factory.py",
+      "path": "scrapeclaw/exporter/factory.py",
+      "sha256": "b0bef762d50c3be9563cbc869e4c396913d7fd87f184cadf3c4b21098bf1ab0f"
+    },
+    {
+      "upstream_path": "scrapeclaw/exporter/formats.py",
+      "path": "scrapeclaw/exporter/formats.py",
+      "sha256": "66793cd88e43efdfc3758e6e648ebde249ef22ef7dab0708a8e29962346a4127"
+    },
+    {
+      "upstream_path": "scrapeclaw/gate/__init__.py",
+      "path": "scrapeclaw/gate/__init__.py",
+      "sha256": "a16b33940d534b76df98bd35712c236dc93ae105d926622a19da28f1299495c6"
+    },
+    {
+      "upstream_path": "scrapeclaw/gate/execution_gate.py",
+      "path": "scrapeclaw/gate/execution_gate.py",
+      "sha256": "b616f8aefd544c22d3866c369fe4fefe31567c9fe48a083aaf16a77c069b5c81"
+    },
+    {
+      "upstream_path": "scrapeclaw/models.py",
+      "path": "scrapeclaw/models.py",
+      "sha256": "d90effbd2ac520bc8a903c1df71f399782196ed16d30fe7fb853a9b238ec51e4"
+    },
+    {
+      "upstream_path": "scrapeclaw/probe/__init__.py",
+      "path": "scrapeclaw/probe/__init__.py",
+      "sha256": "687c3bf75e83f22cd173eeb8d0e3d58b4eeba79971a7a79277366ca4112b3d55"
+    },
+    {
+      "upstream_path": "scrapeclaw/probe/browser.py",
+      "path": "scrapeclaw/probe/browser.py",
+      "sha256": "acf62f6a0ff3356104b1e090a9cd10213c58bbe3e367ac6087596f4a11fc22c7"
+    },
+    {
+      "upstream_path": "scrapeclaw/probe/captcha_detector.py",
+      "path": "scrapeclaw/probe/captcha_detector.py",
+      "sha256": "ce821b66c3965044ccf6aef2c660c11f93ce93591a91c89147ae5e3c457d9929"
+    },
+    {
+      "upstream_path": "scrapeclaw/probe/captcha_solvers.py",
+      "path": "scrapeclaw/probe/captcha_solvers.py",
+      "sha256": "11392cc9f8e9bb35a8a5c1fe8677cadc90fe0521106ef2670cefe703ee580ccd"
+    },
+    {
+      "upstream_path": "scrapeclaw/probe/session_manager.py",
+      "path": "scrapeclaw/probe/session_manager.py",
+      "sha256": "95ec088d33f0eec04ee21119cb47710309b692512b2cfc7866e674c2123d5c61"
+    },
+    {
+      "upstream_path": "scrapeclaw/probe/stealth.py",
+      "path": "scrapeclaw/probe/stealth.py",
+      "sha256": "bc163a9d29447463a4bb9a294082f054eff8a9836d9f36123a57d15ccd1e7f00"
+    },
+    {
+      "upstream_path": "scrapeclaw/synthesizer/ast_checker.py",
+      "path": "scrapeclaw/synthesizer/ast_checker.py",
+      "sha256": "fecb6843a5c5bb242ca9f5c2d00e20ef3ff8c4ece1f643f58ce8d9f4e1bcfd6f"
+    },
+    {
+      "upstream_path": "scrapeclaw/synthesizer/generator.py",
+      "path": "scrapeclaw/synthesizer/generator.py",
+      "sha256": "4ee7dff2ea5c1d682d187c9fef25862b78e62f252569c32a73cb8ca41fa3a6eb"
+    },
+    {
+      "upstream_path": "scrapeclaw/synthesizer/scaffolders/__init__.py",
+      "path": "scrapeclaw/synthesizer/scaffolders/__init__.py",
+      "sha256": "c3dad7ba096c4cae9aa58785a2f2c988cd69207a941ebf3cf025099698b7294e"
+    },
+    {
+      "upstream_path": "scrapeclaw/synthesizer/scaffolders/base.py",
+      "path": "scrapeclaw/synthesizer/scaffolders/base.py",
+      "sha256": "fcbf130f4618ef18561b719cc6bc293190d5f0f6302e07c4a6c28c0b8a7d543d"
+    },
+    {
+      "upstream_path": "scrapeclaw/synthesizer/scaffolders/drission_scaffolder.py",
+      "path": "scrapeclaw/synthesizer/scaffolders/drission_scaffolder.py",
+      "sha256": "abe5b412086378e4a7917a8a694c585854385ceea4183e51de0f40e371475ca4"
+    },
+    {
+      "upstream_path": "scrapeclaw/synthesizer/scaffolders/httpx_scaffolder.py",
+      "path": "scrapeclaw/synthesizer/scaffolders/httpx_scaffolder.py",
+      "sha256": "b64f7b43c74b5d02cf5a5ab49f2afba3a63d2cb5c54b0e6953067594e2352ee1"
+    },
+    {
+      "upstream_path": "scrapeclaw/synthesizer/scaffolders/playwright_scaffolder.py",
+      "path": "scrapeclaw/synthesizer/scaffolders/playwright_scaffolder.py",
+      "sha256": "9da9373924f83bd630492bed2955104882b5f122cc5dce88d91f492441521170"
+    },
+    {
+      "upstream_path": "scrapeclaw/synthesizer/scaffolders/scrapy_scaffolder.py",
+      "path": "scrapeclaw/synthesizer/scaffolders/scrapy_scaffolder.py",
+      "sha256": "33db7713d3e89a6b610ed7809c6f7be0e254099d8d47fff629f8aee54dd5cdd9"
+    },
+    {
+      "upstream_path": "scrapeclaw/traffic/__init__.py",
+      "path": "scrapeclaw/traffic/__init__.py",
+      "sha256": "a16b33940d534b76df98bd35712c236dc93ae105d926622a19da28f1299495c6"
+    },
+    {
+      "upstream_path": "scrapeclaw/traffic/models.py",
+      "path": "scrapeclaw/traffic/models.py",
+      "sha256": "5ccff557664bf00a51b77624c8dfc181c6f1427ad62a3ed6a6fed2eed3aefc34"
+    },
+    {
+      "upstream_path": "scrapeclaw/traffic/store.py",
+      "path": "scrapeclaw/traffic/store.py",
+      "sha256": "7a95fe4ba17e17b0fc438dcaffb10b262539ddd2ff7d2ffb4b3250eb202bb585"
+    }
+  ],
+  "excluded_paths": [
+    ".env.example"
+  ],
+  "upstream_scripts_executed": false
+}

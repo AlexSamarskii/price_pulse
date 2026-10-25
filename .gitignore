@@ -1,0 +1,102 @@
+# ==============================================================================
+# ScrapeClaw Git Ignore Configuration
+# ==============================================================================
+
+# Environment Variables & Secrets (Strictly Protected)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.token
+
+# User Sessions & Personal Cookie Files (Strictly Protected)
+*_cookies.txt
+cookies.txt
+github_cookies.txt
+*session*.json
+
+# Python Bytecode & Build Artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Virtual Environments
+venv/
+env/
+.venv/
+ENV/
+
+# Testing & Caches
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# Local Output & Temp Data
+output/
+temp/
+scratch/
+scrapeclaw_workspace/
+crawlers/
+*.log
+
+# Playwright Downloads & Recordings
+.playwright/
+test-results/
+
+# IDE & Editor Configurations
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Local testing spider crawler scripts and outputs (excluded per release design)
+spiders/
+
+# Public product documentation remains versioned.
+
+
+# Product tests and fixtures remain versioned.
+
+# Local orchestration: not part of the public product.
+.agent/
+.agents/
+AGENTS.md
+CLAUDE.md
+skills-lock.json
+.codex/
+.claude/
+# Credentials and runtime output.
+.env
+.env.*
+*.pem
+*.key
+secrets/
+.venv/
+.uv-cache/
+node_modules/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage*
+coverage/
+htmlcov/
+/artifacts/
+/data/
+/generated/
+/runtime/
+*.sqlite
+*.sqlite3
+*.db
+playwright-report/
+test-results/
+.DS_Store

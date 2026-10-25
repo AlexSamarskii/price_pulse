@@ -1,0 +1,24 @@
+FROM python:3.11-slim AS pricepulse-runtime
+
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONPATH=/app
+
+RUN groupadd --gid 65532 runtime && \
+    useradd --uid 65532 --gid 65532 --no-create-home --home-dir /tmp runtime
+
+RUN pip install --no-cache-dir \
+    "httpx==0.28.1" \
+    "anyio==4.15.1" \
+    "certifi==2026.10.23" \
+    "httpcore==1.0.9" \
+    "h11==0.16.0" \
+    "idna==3.20" \
+    "typing-extensions==4.16.0"
+
+COPY pricepulse /app/pricepulse
+
+WORKDIR /tmp
+USER 65532:65532
+
+ENTRYPOINT ["python3", "-m", "pricepulse.runtime.worker"]
