@@ -10,8 +10,20 @@ from pricepulse.domain.money import MoneyAmount
 def price_delta(current: PriceField, previous: PriceField) -> Decimal | None:
     if current.state != "present" or previous.state != "present":
         return None
-    left = MoneyAmount(current.amount or Decimal("0"), current.currency or "", "sale")
-    right = MoneyAmount(previous.amount or Decimal("0"), previous.currency or "", "sale")
+    left = MoneyAmount(
+        current.amount or Decimal("0"),
+        current.currency or "",
+        "sale",
+        current.unit_quantity,
+        current.unit_name,
+    )
+    right = MoneyAmount(
+        previous.amount or Decimal("0"),
+        previous.currency or "",
+        "sale",
+        previous.unit_quantity,
+        previous.unit_name,
+    )
     return left.delta(right)
 
 

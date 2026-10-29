@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PricePulse dashboard</title>
+  <link rel="stylesheet" href="/static/dashboard.css">
+  <script src="/static/dashboard.js" defer></script>
+</head>
+<body>
+  <main class="dashboard" aria-labelledby="dashboard-title">
+    <h1 id="dashboard-title">PricePulse dashboard</h1>
+    <p id="dashboard-state" class="dashboard-state" role="status" aria-live="polite">Loading persisted data…</p>
+    <div id="dashboard-error" class="dashboard-error" role="alert" aria-live="assertive" hidden>The dashboard could not load persisted data.</div>
+    <div id="dashboard-blocked" class="dashboard-blocked" role="status" aria-live="polite" hidden></div>
+
+    <section aria-labelledby="sources-heading" class="card">
+      <h2 id="sources-heading">Sources</h2>
+      <p id="sources-empty" class="empty-state" hidden>No owned sources are stored yet.</p>
+      <ul id="sources" class="data-list" aria-label="Persisted sources"></ul>
+    </section>
+
+    <section aria-labelledby="products-heading" class="card">
+      <h2 id="products-heading">Products</h2>
+      <p id="products-empty" class="empty-state" hidden>No products are stored yet.</p>
+      <ul id="products" class="data-list" aria-label="Persisted products"></ul>
+    </section>
+
+    <section aria-labelledby="history-heading" class="card">
+      <h2 id="history-heading">Selected product history</h2>
+      <p id="history-empty" class="empty-state" hidden>No observations are stored for the selected product.</p>
+      <p id="stale-empty" class="empty-state" hidden>No stale observations are available.</p>
+      <ul id="history" class="data-list" aria-label="Product price history"></ul>
+    </section>
+
+    <section aria-labelledby="changes-heading" class="card">
+      <h2 id="changes-heading">Price changes</h2>
+      <p id="changes-empty" class="empty-state" hidden>At least two observations are required to show a price change.</p>
+      <ul id="changes" class="data-list" aria-label="Persisted price changes"></ul>
+    </section>
+
+    <section aria-labelledby="jobs-heading" class="card">
+      <h2 id="jobs-heading">Job states</h2>
+      <p id="jobs-empty" class="empty-state" hidden>No collection jobs are stored yet.</p>
+      <ul id="jobs" class="data-list" aria-label="Persisted collection jobs"></ul>
+    </section>
+
+    <section aria-labelledby="quality-heading" class="card">
+      <h2 id="quality-heading">Quality issues</h2>
+      <p id="quality-empty" class="empty-state" hidden>No persisted quality issues are available.</p>
+      <ul id="quality" class="data-list" aria-label="Persisted quality issues"></ul>
+    </section>
+
+    <section aria-labelledby="alerts-heading" class="card">
+      <h2 id="alerts-heading">Alerts</h2>
+      <p id="alerts-empty" class="empty-state" hidden>No persisted alert events are available.</p>
+      <ul id="alerts" class="data-list" aria-label="Persisted alert events"></ul>
+    </section>
+  </main>
+  <noscript>This dashboard requires JavaScript to load data from the local API.</noscript>
+</body>
+</html>

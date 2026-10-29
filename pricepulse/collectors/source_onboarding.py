@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping
-from urllib.parse import unquote, urlsplit
+from urllib.parse import urlsplit
+
+from pricepulse.egress.policy import effective_path as egress_effective_path
 
 
 REQUIRED_POLICY_FIELDS = {
@@ -69,19 +72,26 @@ def normalize_host(host: str) -> str:
 
 
 def effective_path(path: str) -> str:
-    if "\x00" in path or ";" in path or "\\" in path or "%" in path:
-        raise SourcePolicyError("URL path contains an ambiguous character")
-    current = unquote(path, encoding="utf-8", errors="strict")
-    segments = current.split("/")
-    if any(segment == ".." for segment in segments):
-        raise SourcePolicyError("URL path escapes its allowed root")
-    return current or "/"
+    try:
+        return egress_effective_path(path)
+    except ValueError as exc:
+        raise SourcePolicyError(str(exc)) from exc
+
+
+def path_is_within_allowed_prefixes(path: str, allowed_path_prefixes: list[str]) -> bool:
+    effective = effective_path(path)
+    return any(
+        prefix == "/"
+        or effective == prefix
+        or effective.startswith(prefix if prefix.endswith("/") else f"{prefix}/")
+        for prefix in allowed_path_prefixes
+    )
 
 
 def validate_source_policy(raw: Mapping[str, Any]) -> dict[str, Any]:
     keys = set(raw)
     missing = REQUIRED_POLICY_FIELDS - keys
-    extra = keys - REQUIRED_POLICY_FIELDS
+    extra = keys - REQUIRED_POLICY_FIELDS - {"drop_query_parameters"}
     if missing:
         raise SourcePolicyError(f"missing required fields: {sorted(missing)}")
     if extra:
@@ -103,7 +113,7 @@ def validate_source_policy(raw: Mapping[str, Any]) -> dict[str, Any]:
         raise SourcePolicyError("base_url must not contain credentials or a fragment")
     if parsed.query:
         raise SourcePolicyError("base_url must not contain query parameters")
-    if any(char in parsed.path for char in ";\\%\x00") or any(
+    if any(char in parsed.path for char in ";\\\x00") or any(
         segment == ".." for segment in parsed.path.split("/")
     ):
         raise SourcePolicyError("base_url path is ambiguous or traverses")
@@ -125,7 +135,7 @@ def validate_source_policy(raw: Mapping[str, Any]) -> dict[str, Any]:
         for segment in item.split("/")
     ):
         raise SourcePolicyError("allowed_path_prefixes are ambiguous or traverse")
-    if not effective_path(parsed.path).startswith(tuple(allowed_path_prefixes)):
+    if not path_is_within_allowed_prefixes(parsed.path, allowed_path_prefixes):
         raise SourcePolicyError("base_url path is outside allowed_path_prefixes")
 
     robots_policy = raw["robots_policy"]
@@ -153,6 +163,14 @@ def validate_source_policy(raw: Mapping[str, Any]) -> dict[str, Any]:
     policy["timeout_seconds"] = _validate_int(raw["timeout_seconds"], "timeout_seconds", 1, 120)
     policy["allowed_currencies"] = currencies
     policy["live_enabled"] = live_enabled
+    if "drop_query_parameters" in raw:
+        dropped = _string_list(raw["drop_query_parameters"], "drop_query_parameters", minimum=0)
+        if len(dropped) > 32 or any(re.fullmatch(r"[A-Za-z0-9_-]{1,64}", item) is None for item in dropped):
+            raise SourcePolicyError("drop_query_parameters contains an invalid parameter name")
+        normalized_dropped = [item.lower() for item in dropped]
+        if len(set(normalized_dropped)) != len(normalized_dropped):
+            raise SourcePolicyError("drop_query_parameters contains duplicates")
+        policy["drop_query_parameters"] = normalized_dropped
     return policy
 
 
@@ -165,7 +183,10 @@ def validate_target_url(url: str, policy: Mapping[str, Any]) -> str:
     host = normalize_host(parsed.hostname or "")
     if host not in policy["allowed_hosts"]:
         raise SourcePolicyError("target host is outside SourcePolicy")
-    if not effective_path(parsed.path).startswith(tuple(policy["allowed_path_prefixes"])):
+    if not path_is_within_allowed_prefixes(
+        parsed.path,
+        policy["allowed_path_prefixes"],
+    ):
         raise SourcePolicyError("target path is outside SourcePolicy")
     return url
 

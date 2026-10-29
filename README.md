@@ -1,66 +1,208 @@
-# PricePulse — мониторинг цен и товарных данных
+# PricePulse
 
-Платформа на основе [ScrapeClaw](https://github.com/YunyiFlux/ScrapeClaw):
-цель и разрешённый URL → скрапер-кандидат → изолированная проверка → сбор →
-нормализация → история цен, уведомления и экспорт.
+PricePulse — локальный сервис мониторинга товарных цен. Он хранит источники и версии скраперов, нормализует результаты сбора, ведёт историю наблюдений и формирует уведомления об изменении цены и наличия. Данные доступны через REST API, dashboard и экспорт CSV/JSON.
 
-**Статус: подготовлены исходники и проектная структура. Предметный MVP ещё не реализован.**
-Описание ниже задаёт направление продукта, а не утверждает готовность функций.
+Сгенерированный код выполняется в отдельном Docker-контейнере с ограничениями файловой системы, сети и ресурсов.
 
-## Планируемые возможности
+## Содержание
 
-- Версионированная генерация скраперов по URL и описанию цели.
-- Source policies, local SPA fixtures, проверка и явная активация кандидатов.
-- Пайплайн collect → normalize → deduplicate → enrich → store.
-- Точные денежные значения, варианты товаров, availability и provenance.
-- История и изменения цен, идемпотентные уведомления и durable jobs.
-- CSV/JSON/API и локальный dashboard.
-- Адаптеры OpenAI, Anthropic и Ollama с contract-тестами без реальных ключей.
+- [Функциональность](#функциональность)
+- [Требования и установка](#требования-и-установка)
+- [Запуск](#запуск)
+- [API](#api)
+- [Изолированное исполнение](#изолированное-исполнение)
+- [Архитектура](#архитектура)
+- [Настройка источников](#настройка-источников)
+- [Тестирование](#тестирование)
+- [Статус и ограничения](#статус-и-ограничения)
+- [Документация](#документация)
+- [Лицензия и происхождение кода](#лицензия-и-происхождение-кода)
 
-Каждая площадка подключается и проверяется отдельно. Поддержка произвольного
-сайта и успешное преодоление любых блокировок не гарантируются.
+## Функциональность
 
-## Основа и граница переиспользования
+- Валидация SourcePolicy: домены, пути, robots policy, валюта и лимиты запросов.
+- Версионирование кандидатов скрапера с хешами кода, зависимостей и политики; активация после проверок исполнения и данных.
+- Нормализация Decimal-цен, валют, наличия, вариантов и упаковок; детерминированная дедупликация.
+- Неизменяемая история наблюдений с явными состояниями missing/unknown.
+- Идемпотентные задания, leases, ограниченные повторы, контроль частоты и параллельности, восстановление после сбоев.
+- Уведомления об изменении цены и наличия с cooldown и дедупликацией событий.
+- REST API, dashboard, журнал ошибок качества и экспорт CSV/JSON с защитой от CSV formula injection.
+- Адаптеры OpenAI-compatible API, native Anthropic и Ollama с общей схемой извлечения.
 
-ScrapeClaw 1.0.0, MIT, закреплённый commit:
-`4e0ed78478db38c1173610b39dba573dcf46bd77`.
+## Требования и установка
 
-Переиспользуются SDK/CLI, browser probe, анализ SPA/traffic, scaffolders и exporters.
-Исходный execution gate — subprocess с окружением хоста; он не является готовым
-изолированным runtime для сервиса. Hardened runtime, очереди/jobs, product DB,
-API/dashboard и provider adapters требуют реализации и отдельной проверки.
+| Компонент | Требование |
+| --- | --- |
+| Python | 3.11 или новее |
+| uv | Установка зависимостей по lockfile |
+| Docker | Исполнение кандидатов и проверки изоляции |
+| Node.js | 18 или новее, для UI-тестов |
 
-[Исходная документация](docs/upstream/README.md) ·
-[Проверенные возможности и ограничения](docs/UPSTREAM_ASSESSMENT.md) ·
-[Manifest исходников](docs/upstream/source_manifest.json)
+Команды выполняются из корня репозитория:
 
-## Структура
-
-```text
-scrapeclaw/       # Закреплённое ядро upstream
-pyproject.toml   # Исходный manifest пакета ScrapeClaw
-LICENSE          # Оригинальная MIT-лицензия
-ATTRIBUTION.md
-config.example.yaml
-docs/upstream/   # Исходные README и provenance
+```sh
+uv sync --locked --extra dev
+uv pip install --requirement pricepulse/runtime/requirements.lock
 ```
 
-Модули PricePulse, миграции, API, runtime и tests появятся при реализации.
-Будущий локальный MVP: Python, SQLite, небольшой HTTP API/dashboard; окончательные
-команды запуска будут зафиксированы после baseline и реализации.
+Для запуска API и dashboard Docker не требуется.
 
-## Установка исходного ScrapeClaw
+## Запуск
 
-Исходный пакет требует Python 3.10+, Playwright/Chromium; для будущего PricePulse
-планируется Python 3.11+. Инструкции upstream описаны в его README, но исходники
-в этом срезе ещё не проходили продуктовую проверку окружения. Установка SDK
-не означает наличие работающего PricePulse API или безопасного execution worker.
+```sh
+uv run python -m pricepulse --database pricepulse.db --host 127.0.0.1 --port 8000
+```
 
-Реальные сайты, LLM API и сгенерированные скраперы во время подготовки не запускались.
-Рабочие credentials не входят в репозиторий. Не запускайте недоверенный generated
-код на хосте; проверенный изолированный runtime — обязательное условие исполнения.
+Приложение создаёт SQLite-файл, применяет миграции и запускает HTTP-сервер. Dashboard доступен по адресу http://127.0.0.1:8000/. Новая база не содержит демонстрационных данных.
+
+Проверка доступности:
+
+```sh
+curl -fsS http://127.0.0.1:8000/health
+```
+
+Ожидаемый результат: HTTP 200, `{"status":"ok"}`.
+
+| Параметр | Значение по умолчанию |
+| --- | --- |
+| `--database` | `PRICEPULSE_DATABASE` или `pricepulse.db` |
+| `--host` | `127.0.0.1`; также поддерживается `::1` |
+| `--port` | `8000` |
+
+Аргумент `--database` имеет приоритет над переменной окружения. Справка доступна через `uv run python -m pricepulse --help`.
+
+## API
+
+JSON-запросы передаются с `Content-Type: application/json`. Для `POST /sources` обязательны поля `policy` и `goal`.
+
+| Метод и путь | Назначение |
+| --- | --- |
+| `GET /health` | Проверка доступности |
+| `GET, POST /sources` | Чтение и сохранение источников |
+| `GET /sources/{source_id}` | Получение источника |
+| `GET /sources/{source_id}/policies` | Политики источника |
+| `GET /sources/{source_id}/candidates` | Кандидаты скрапера |
+| `POST /sources/{source_id}/{version_id}/activate` | Активация проверенного кандидата |
+| `GET /products?source_id=...` | Товары источника |
+| `GET /products/{product_id}/variants` | Варианты товара |
+| `GET /variants/{variant_id}/history` | История наблюдений |
+| `GET /variants/{variant_id}/export?format=csv` | Экспорт истории; `format=json` для JSON |
+| `GET, POST /jobs` | Чтение и идемпотентное создание заданий |
+| `GET /jobs/{job_id}` | Состояние задания |
+| `POST /jobs/{job_id}/cancel` | Отмена задания в состоянии `queued` |
+| `GET, POST /alerts/rules` | Правила уведомлений |
+| `POST /alerts/evaluate` | Оценка правил |
+| `GET /alerts/events` | Журнал событий |
+| `GET /quality-issues` | Ошибки качества данных |
+
+Dashboard получает сохранённые данные через API и отображает источники, товары, историю, задания, ошибки качества и уведомления. Предусмотрены состояния loading, empty, error, stale и blocked.
+
+## Изолированное исполнение
+
+Сборка runtime-образа:
+
+```sh
+docker build -f Dockerfile.runtime -t pricepulse-runtime:local .
+```
+
+`SandboxedContainerRunner` использует этот образ по умолчанию. Контейнер работает от UID/GID 65532, с read-only root, выключенной сетью, сброшенными capabilities, `no-new-privileges` и лимитами CPU, памяти, PID, времени и вывода.
+
+Проверка границ изоляции:
+
+```sh
+uv run --extra dev python scripts/run_sandbox_probe.py
+```
+
+[Compose-файл](deploy/runtime-compose.yaml) описывает worker и отдельный egress broker. Политика broker передаётся как JSON SourcePolicy в `PRICEPULSE_EGRESS_POLICY`. Сгенерированный скрапер не исполняется в процессе API или напрямую на хосте.
+
+## Архитектура
+
+```mermaid
+flowchart LR
+    P[URL, цель и SourcePolicy] --> C[Кандидат скрапера]
+    C --> R[Изолированный runtime]
+    R --> G[Проверка результатов]
+    G --> D[Нормализация и дедупликация]
+    D --> S[(SQLite)]
+    S --> A[API, история, уведомления и экспорт]
+    A --> U[Dashboard]
+```
+
+Управляющая часть использует стандартный HTTP-сервер Python и SQLite. Dashboard состоит из статического HTML и JavaScript. Исполнение недоверенного кода и проверка внешних запросов вынесены в runtime и egress broker.
+
+| Каталог | Назначение |
+| --- | --- |
+| `pricepulse/api/` | REST API, уведомления и экспорт |
+| `pricepulse/collectors/` | Подключение источников, probe, synthesis и проверки |
+| `pricepulse/providers/` | LLM-протоколы и схема извлечения |
+| `pricepulse/runtime/` | Контейнерное исполнение |
+| `pricepulse/egress/` | Сетевые ограничения |
+| `pricepulse/data/`, `pricepulse/domain/` | Обработка, хранение и модели данных |
+| `pricepulse/jobs/` | Задания, leases и расписания |
+| `pricepulse/web/` | HTML, CSS и JavaScript dashboard |
+| `migrations/` | Версии схемы SQLite |
+| `scripts/`, `tests/` | Проверки runtime, поставки и функциональности |
+| `deploy/`, `docs/` | Топология исполнения и документация |
+
+## Настройка источников
+
+Образец политики: [SOURCE_POLICY.example.json](docs/SOURCE_POLICY.example.json). Порядок подключения: [руководство onboarding](docs/source_onboarding.md).
+
+SourcePolicy задаёт разрешённые домены и пути, валюту, timeout, частоту запросов и параллельность. Для локальных фикстур используются `live_enabled: false` и `robots_policy: operator_authorized_fixture`. Для live-режима требуются отдельное одобрение, `robots_policy: honor` и разрешённый путь получения `/robots.txt`.
+
+Поле `drop_query_parameters` позволяет удалять неидентифицирующие tracking-параметры из canonical URL. Параметры варианта товара сохраняются. Содержимое товарных страниц не может изменять SourcePolicy.
+
+## Тестирование
+
+Последний полный локальный прогон: 152 теста пройдены. Набор охватывает изоляцию контейнеров, egress, collectors, заглушки LLM-протоколов, обработку данных, миграции, API, задания, UI, установку wheel вне checkout и проверку происхождения кода.
+
+Для полного набора требуются Docker, собранный runtime-образ и Node.js 18+:
+
+```sh
+uv run --with-requirements pricepulse/runtime/requirements.lock --extra dev pytest -q
+```
+
+Запуск отдельного теста:
+
+```sh
+uv run --extra dev pytest -q tests/jobs/test_limits.py::test_availability_alerts_use_confirmed_transitions_and_durable_cooldown
+```
+
+Проверка происхождения адаптированного ядра:
+
+```sh
+uv run python scripts/verify_upstream_provenance.py
+```
+
+## Статус и ограничения
+
+Локальная реализация проверена на фикстурах. 29 октября 2026 года выполнена ограниченная проверка LIME: один товар, четыре размера и восемь наблюдений по двум реальным снимкам. Проверены история, экспорт и отсутствие ложных уведомлений при неизменных цене и наличии. Регулярный сбор не включён.
+
+| Проверка | Статус |
+| --- | --- |
+| Публичный источник | Ограниченная проверка одной карточки LIME пройдена с соблюдением robots policy и лимитов |
+| Live-провайдеры | Один реальный вызов Ollama `qwen2.5:7b` проверен; OpenAI и native Anthropic остаются непроверенными |
+
+Порядок фиксации результатов приведён в [руководстве внешнего воспроизведения](docs/EXTERNAL_REPRODUCTION.md).
+
+- Сервис рассчитан на одного оператора и доступ через loopback. Публичная многопользовательская эксплуатация требует отдельной реализации аутентификации и разграничения доступа.
+- Каждая площадка подключается и проверяется отдельно. Обход блокировок и решение CAPTCHA не входят в функциональность.
+- Ошибки HTTP, challenge, 401/403/429 и пустые ответы не считаются подтверждёнными наблюдениями.
+- Недоступность runtime блокирует исполнение кандидата; запуск на хосте не используется.
+- Проверки SQLite не подтверждают корректность распределённой эксплуатации.
+- Уведомления доступны в UI/API; внешняя доставка через email или Telegram не подключена.
+
+## Документация
+
+- [Архитектура](docs/ARCHITECTURE.md)
+- [Разработка, миграции и тесты](docs/DEVELOPMENT.md)
+- [Подключение источников](docs/source_onboarding.md)
+- [Модель данных](docs/DATA_MODEL.md)
+- [Диагностика и quarantine](docs/TROUBLESHOOTING_QUARANTINE.md)
+- [Внешние проверки](docs/EXTERNAL_REPRODUCTION.md)
+- [Атрибуция](ATTRIBUTION.md)
+- [История изменений](CHANGELOG.md)
 
 ## Лицензия
 
-ScrapeClaw: **MIT**, copyright (c) 2026 ScrapeClaw Contributors.
-[LICENSE](LICENSE) и [атрибуция](ATTRIBUTION.md) сохранены.
+Проект распространяется по MIT. Полный текст лицензии и обязательные уведомления об авторских правах приведены в [LICENSE](LICENSE).

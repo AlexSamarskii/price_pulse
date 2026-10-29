@@ -7,9 +7,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from scrapeclaw.synthesizer.ast_checker import check_script_safety
-
 from pricepulse.collectors.capture_sanitizer import SanitizedCapture
+from pricepulse.collectors.ast_checker import check_script_safety
 from pricepulse.collectors.source_onboarding import SourceOnboarding, validate_fixture_path
 
 
@@ -120,7 +119,7 @@ def generate_fixture_candidate(
         raise SynthesisError(f"candidate failed AST safety: {reason}")
     code_digest = hashlib.sha256(code.encode("utf-8")).hexdigest()
     dependencies = {
-        "engine": "scrapeclaw-httpx-fixture",
+        "engine": "pricepulse-httpx-fixture",
         "extraction_goal": onboarding.goal,
         "provider_id": provider_id,
         "model": model,
@@ -147,7 +146,7 @@ def generate_fixture_candidate(
         dependencies_sha256=dependencies_digest,
         policy=onboarding.policy,
         policy_digest=onboarding.policy_digest,
-        engine="scrapeclaw-httpx-fixture",
+        engine="pricepulse-httpx-fixture",
         provider_id=provider_id,
         model=model,
         fixture_verification="pending_offline_gate",

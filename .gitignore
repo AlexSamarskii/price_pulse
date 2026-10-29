@@ -1,102 +1,80 @@
-# ==============================================================================
-# ScrapeClaw Git Ignore Configuration
-# ==============================================================================
+# Local orchestration and internal notes.
+/.agent/
+/.agents/
+/.codex/
+/.claude/
+/.codegraph/
+/AGENTS.md
+/CLAUDE.md
+/skills-lock.json
+/docs/UPSTREAM_ASSESSMENT.md
 
-# Environment Variables & Secrets (Strictly Protected)
+# Secrets and personal sessions.
 .env
 .env.*
-!.env.example
-*.key
 *.pem
+*.key
 *.token
-
-# User Sessions & Personal Cookie Files (Strictly Protected)
+secrets/
 *_cookies.txt
 cookies.txt
-github_cookies.txt
 *session*.json
 
-# Python Bytecode & Build Artifacts
+# Python environments and build output.
+.venv*/
+venv/
+env/
+ENV/
 __pycache__/
 *.py[cod]
 *$py.class
 *.egg-info/
 .eggs/
-dist/
 build/
+dist/
+*.whl
 
-# Virtual Environments
-venv/
-env/
-.venv/
-ENV/
-
-# Testing & Caches
+# Test and tool caches.
+.uv-cache/
 .pytest_cache/
-.coverage
-htmlcov/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
 .tox/
+.coverage*
+coverage/
+htmlcov/
+coverage.xml
 
-# Local Output & Temp Data
-output/
-temp/
-scratch/
-scrapeclaw_workspace/
-crawlers/
+# Local databases, generated scrapers and run artifacts.
+/artifacts/
+/data/
+/generated/
+/runtime/
+/output/
+/temp/
+/scratch/
+/scrapeclaw_workspace/
+/crawlers/
+/spiders/
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
 *.log
 
-# Playwright Downloads & Recordings
+# Browser tooling.
+node_modules/
 .playwright/
+playwright-report/
 test-results/
 
-# IDE & Editor Configurations
+# Editor and OS files.
 .idea/
 .vscode/
 *.swp
 *.swo
 .DS_Store
 Thumbs.db
-
-# Local testing spider crawler scripts and outputs (excluded per release design)
-spiders/
-
-# Public product documentation remains versioned.
-
-
-# Product tests and fixtures remain versioned.
-
-# Local orchestration: not part of the public product.
-.agent/
-.agents/
-AGENTS.md
-CLAUDE.md
-skills-lock.json
-.codex/
-.claude/
-# Credentials and runtime output.
-.env
-.env.*
-*.pem
-*.key
-secrets/
-.venv/
-.uv-cache/
-node_modules/
-__pycache__/
-*.pyc
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.coverage*
-coverage/
-htmlcov/
-/artifacts/
-/data/
-/generated/
-/runtime/
-*.sqlite
-*.sqlite3
-*.db
-playwright-report/
-test-results/
-.DS_Store

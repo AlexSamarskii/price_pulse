@@ -1,51 +1,30 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=75.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "pricepulse"
 version = "0.1.0"
-description = "Price monitoring built on the ScrapeClaw synthesis toolkit"
+description = "Local price monitoring with hardened scraper execution"
 readme = "README.md"
 requires-python = ">=3.11"
-authors = [
-    { name = "ScrapeClaw Team" }
-]
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
+license = { text = "MIT" }
 dependencies = [
-    "pydantic>=2.7.0",
-    "openai>=1.30.0",
-    "typer>=0.12.0",
-    "rich>=13.7.0",
-    "pyyaml>=6.0.1",
-    "playwright>=1.44.0",
     "httpx>=0.27.0",
-    "httpcore>=1.0.5",
-    "jinja2>=3.1.4",
-    "jsonpath-ng>=1.6.1",
-    "tenacity>=8.3.0",
-    "python-dotenv>=1.0.0",
+    "pydantic>=2.7.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.2.0",
-    "pytest-asyncio>=0.23.7",
 ]
 
 [project.scripts]
-scrapeclaw = "scrapeclaw.cli.main:app"
+pricepulse = "pricepulse.__main__:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["pricepulse*", "scrapeclaw*"]
+include = ["pricepulse*", "migrations*"]
 
-[project.urls]
-Homepage = "https://github.com/YunyiFlux/ScrapeClaw"
-Repository = "https://github.com/YunyiFlux/ScrapeClaw"
-Documentation = "https://github.com/YunyiFlux/ScrapeClaw#readme"
-Issues = "https://github.com/YunyiFlux/ScrapeClaw/issues"
+[tool.setuptools.package-data]
+"pricepulse.web" = ["templates/**", "static/**"]

@@ -41,6 +41,7 @@ class EgressPolicy:
     requests_per_minute: int
     max_concurrency: int
     max_response_bytes: int = MAX_RESPONSE_BYTES
+    robots_policy: str = "honor"
 
     @classmethod
     def from_source_policy(cls, source_policy: Mapping[str, object]) -> "EgressPolicy":
@@ -62,6 +63,8 @@ class EgressPolicy:
             raise ValueError("SourcePolicy requires absolute allowed_path_prefixes")
         if source_policy.get("live_enabled") is not True:
             raise ValueError("live egress requires live_enabled=true")
+        if source_policy.get("robots_policy", "honor") != "honor":
+            raise ValueError("live egress requires robots_policy=honor")
         try:
             timeout = float(source_policy["timeout_seconds"])
             requests_per_minute = int(source_policy["requests_per_minute"])
@@ -77,6 +80,7 @@ class EgressPolicy:
             max_redirects=3,
             requests_per_minute=requests_per_minute,
             max_concurrency=max_concurrency,
+            robots_policy="honor",
         )
 
     def allows_host(self, host: str) -> bool:
@@ -84,4 +88,10 @@ class EgressPolicy:
 
     def allows_path(self, path: str) -> bool:
         effective = effective_path(path)
-        return any(effective == prefix or effective.startswith(prefix) for prefix in self.allowed_path_prefixes)
+        for prefix in self.allowed_path_prefixes:
+            if prefix == "/":
+                return True
+            subtree_prefix = prefix if prefix.endswith("/") else f"{prefix}/"
+            if effective == prefix or effective.startswith(subtree_prefix):
+                return True
+        return False

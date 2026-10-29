@@ -104,8 +104,14 @@ def upgrade(connection) -> None:
             UNIQUE (variant_id, observed_at, raw_hash, job_id)
         );
 
-        CREATE TRIGGER observations_append_only
-        BEFORE UPDATE OR DELETE ON observations
+        CREATE TRIGGER observations_append_only_update
+        BEFORE UPDATE ON observations
+        BEGIN
+            SELECT RAISE(ABORT, 'observations are append-only');
+        END;
+
+        CREATE TRIGGER observations_append_only_delete
+        BEFORE DELETE ON observations
         BEGIN
             SELECT RAISE(ABORT, 'observations are append-only');
         END;
@@ -200,7 +206,8 @@ def upgrade(connection) -> None:
 def downgrade(connection) -> None:
     connection.executescript(
         """
-        DROP TRIGGER IF EXISTS observations_append_only;
+        DROP TRIGGER IF EXISTS observations_append_only_update;
+        DROP TRIGGER IF EXISTS observations_append_only_delete;
         DROP TABLE IF EXISTS data_quality_issues;
         DROP TABLE IF EXISTS alert_events;
         DROP TABLE IF EXISTS alert_rules;

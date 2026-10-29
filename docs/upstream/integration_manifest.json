@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "created": "2026-10-29",
+  "source_manifest": "docs/upstream/source_manifest.json",
+  "source_snapshot": "docs/upstream/source_snapshot.tar.gz",
+  "snapshot_policy": {
+    "format": "tar.gz",
+    "executable": false,
+    "sensitive_path_rejection": true,
+    "foreign_payload_rejection": true,
+    "member_hash_verification": true
+  },
+  "mappings": [
+    {
+      "adapted_path": "pricepulse/runtime/worker.py",
+      "upstream_path": "scrapeclaw/gate/execution_gate.py",
+      "adaptation": "Replaced host subprocess execution with a bounded, network-disabled worker protocol."
+    },
+    {
+      "adapted_path": "pricepulse/runtime/settings.py",
+      "upstream_path": "scrapeclaw/config/settings.py",
+      "adaptation": "Replaced automatic dotenv loading with explicit container settings."
+    },
+    {
+      "adapted_path": "pricepulse/egress/policy.py",
+      "upstream_path": "scrapeclaw/engine/scope_guard.py",
+      "adaptation": "Added segment-boundary path normalization and strict host and URL validation."
+    },
+    {
+      "adapted_path": "pricepulse/collectors/ast_checker.py",
+      "upstream_path": "scrapeclaw/synthesizer/ast_checker.py",
+      "adaptation": "Retained AST safety filtering as an additional non-security gate."
+    },
+    {
+      "adapted_path": "pricepulse/collectors/challenge_detector.py",
+      "upstream_path": "scrapeclaw/probe/captcha_detector.py",
+      "adaptation": "Added PricePulse challenge recognition without bypass behavior."
+    },
+    {
+      "adapted_path": "pricepulse/collectors/probe.py",
+      "upstream_path": "scrapeclaw/probe/browser.py",
+      "adaptation": "Reduced probing to sanitized capture and hardened worker analysis."
+    },
+    {
+      "adapted_path": "pricepulse/collectors/synthesis.py",
+      "upstream_path": "scrapeclaw/synthesizer/generator.py",
+      "adaptation": "Limited candidate synthesis to approved fixture templates and version metadata."
+    },
+    {
+      "adapted_path": "pricepulse/collectors/offline_gate.py",
+      "upstream_path": "scrapeclaw/gate/execution_gate.py",
+      "adaptation": "Routed fixture execution through the PricePulse hardened runtime boundary."
+    },
+    {
+      "adapted_path": "pricepulse/collectors/source_onboarding.py",
+      "upstream_path": "scrapeclaw/config/schema.py",
+      "adaptation": "Added explicit PricePulse SourcePolicy and operator-approval validation."
+    },
+    {
+      "adapted_path": "pricepulse/collectors/capture_sanitizer.py",
+      "upstream_path": "scrapeclaw/probe/session_manager.py",
+      "adaptation": "Added session and credential redaction before storage, logs, and prompts."
+    },
+    {
+      "adapted_path": "pricepulse/collectors/prompt_guard.py",
+      "upstream_path": "scrapeclaw/engine/planner.py",
+      "adaptation": "Added immutable-policy prompt framing and injection detection."
+    }
+  ],
+  "snapshot_sha256": "8ae794a0c7f96d9bfcaa3dc11bdbea0ba5db9290d7ef6ad1f6c580ee92c156c1"
+}

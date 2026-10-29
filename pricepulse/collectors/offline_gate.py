@@ -5,9 +5,8 @@ import hashlib
 from dataclasses import dataclass
 from typing import Any, Mapping
 
-from scrapeclaw.synthesizer.ast_checker import check_script_safety
-
 from pricepulse.runtime import ExecutionRequest, ExecutionResult, RuntimeUnavailableError
+from pricepulse.collectors.ast_checker import check_script_safety
 
 
 class OfflineGateError(ValueError):
