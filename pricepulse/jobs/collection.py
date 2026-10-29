@@ -30,7 +30,7 @@ def validate_config(raw):
     config.setdefault("cooldown_seconds", 1800)
     if type(config["enabled"]) is not bool:
         raise ValueError("collection enabled must be boolean")
-    for key, minimum, maximum in (("interval_seconds", 60, 86400), ("max_products", 1, 50),
+    for key, minimum, maximum in (("interval_seconds", 60, 86400), ("max_products", 1, 500),
                                   ("max_catalog_pages", len(urls), 10), ("cooldown_seconds", 60, 86400)):
         if type(config[key]) is not int or not minimum <= config[key] <= maximum:
             raise ValueError(f"collection {key} is out of range")

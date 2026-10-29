@@ -10,6 +10,7 @@ from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 from pricepulse.api.alerts import AlertService, ResourceNotFound
+from pricepulse.api.dashboard import dashboard_snapshot
 from pricepulse.api.export import HISTORY_CSV_FIELDS, serialize_csv_rows, serialize_json_rows
 from pricepulse.collectors.source_onboarding import onboard_source
 from pricepulse.data.repository import DataRepository
@@ -348,6 +349,11 @@ class APIRouteHandler(BaseHTTPRequestHandler):
     def _route(self, method: str) -> tuple[str, int, str]:
         parsed = urlsplit(self.path)
         parts = [part for part in parsed.path.split("/") if part]
+        if method == "GET" and parts == ["dashboard", "data"]:
+            source_id = parse_qs(parsed.query).get("source_id", [None])[0]
+            if source_id and get_source(self.database_path, source_id) is None:
+                raise APIError("source does not exist", status=404)
+            return self._send_payload(dashboard_snapshot(self.database_path, source_id=source_id))
         if method == "GET" and parts == ["health"]:
             return self._send_payload({"status": "ok"})
         if method == "GET" and (parts == [] or parts == ["dashboard"]):

@@ -252,7 +252,7 @@ globalThis.fetch = (url, options) => baseFetch(new URL(url, process.env.DASHBOAR
     assert len(state["jobs"]) == 1 and state["jobs"][0]["status"] == "succeeded"
     assert len(state["quality"]) == 1 and state["quality"][0]["issue_type"] == "dedupe_conflict"
     assert len(state["alerts"]) == 1
-    assert any("Live collection is disabled" in message for message in state["blocked"])
+    assert any("Сбор отключён политикой" in message for message in state["blocked"])
 
 
 def test_dashboard_state_is_derived_from_persisted_fixture(tmp_path: Path, dashboard_input: dict):
@@ -269,7 +269,7 @@ def test_dashboard_state_is_derived_from_persisted_fixture(tmp_path: Path, dashb
     assert state["jobs"][0]["status"] == "succeeded"
     assert len(state["quality"]) == 1
     assert state["alerts"][0]["delta_amount"] == "100.00"
-    assert any("Live collection is disabled" in message for message in state["blocked"])
+    assert any("Сбор отключён политикой" in message for message in state["blocked"])
 
 
 def test_dashboard_polling_refreshes_without_overlapping_loads(tmp_path):
@@ -305,15 +305,19 @@ def _render(tmp_path: Path, dashboard_input: dict) -> dict:
 const fs = require("fs");
 const dashboard = require(process.argv[2]);
 const input = JSON.parse(fs.readFileSync(process.argv[3], "utf8"));
+class Element {
+  constructor() { this.textContent = ""; this.hidden = false; this.dataset = {}; this.children = []; }
+  replaceChildren(...children) { this.children = children; }
+  append(...children) { this.children.push(...children); }
+  appendChild(child) { this.append(child); }
+  setAttribute(key, value) { this[key] = value; }
+  removeAttribute(key) { delete this[key]; }
+  addEventListener() {}
+}
+global.document = { createElement: () => new Element(), createElementNS: () => new Element() };
+global.Option = class extends Element { constructor(text, value) { super(); this.textContent = text; this.value = value; } };
 const elements = {};
-const root = {
-  querySelector: (selector) => (elements[selector] ||= {
-    textContent: "",
-    hidden: false,
-    replaceChildren() {},
-    appendChild() {},
-  }),
-};
+const root = { querySelector: selector => (elements[selector] ||= new Element()) };
 const state = dashboard.deriveDashboardState(input);
 dashboard.renderDashboard(root, state);
 process.stdout.write(JSON.stringify({
@@ -359,17 +363,115 @@ def test_dashboard_template_declares_required_states():
     rendered = Path("pricepulse/web/templates/dashboard.html").read_text(encoding="utf-8")
 
     for text in (
-        "Loading persisted data…",
-        "The dashboard could not load persisted data.",
-        "No owned sources are stored yet.",
-        "No products are stored yet.",
-        "No observations are stored for the selected product.",
-        "No stale observations are available.",
-        "No persisted quality issues are available.",
-        "No persisted alert events are available.",
+        "Загрузка сохранённых данных…",
+        "Не удалось загрузить данные.",
+        "Источники ещё не добавлены.",
+        "Товары не найдены.",
+        "Для выбранного варианта пока нет наблюдений.",
+        "Устаревших наблюдений в выборке нет.",
+        "Сохранённых замечаний нет.",
+        "Уведомлений пока нет.",
     ):
         assert text in rendered
     assert 'aria-live="polite"' in rendered
     assert 'role="alert"' in rendered
     assert "/static/dashboard.css" in rendered
     assert "/static/dashboard.js" in rendered
+
+
+def test_dashboard_filters_links_and_chart_dimensions(tmp_path):
+    script = tmp_path / "dashboard-interactions.cjs"
+    script.write_text("""
+const assert = require('node:assert/strict');
+const d = require(process.argv[2]);
+const now = new Date().toISOString();
+const latest = {price_amount:'100',price_currency:'RUB',price_state:'present',unit_name:'piece',unit_quantity:'1',availability:'available',status:'confirmed',stale:false,observed_at:now};
+const products = [
+ {product_id:'a',title:'Юбка',variants:[{variant_id:'s',sku:'SKU-S',latest,delta:'10.00'},{variant_id:'m',sku:'SKU-M',latest:{...latest,stale:true},delta:null}]},
+ {product_id:'b',title:'Платье',variants:[{variant_id:'b',sku:'SKU-B',latest:{...latest,availability:'unavailable'},delta:'0'}]}
+];
+assert.equal(d.visibleProducts(products, {search:'sku-m'}).length,1);
+assert.deepEqual(d.visibleProducts(products, {filter:'changed'}).map(p=>p.product_id),['a']);
+assert.deepEqual(d.visibleProducts(products, {filter:'available'}).map(p=>p.product_id),['a']);
+assert.deepEqual(d.visibleProducts(products, {filter:'stale'}).map(p=>p.product_id),['a']);
+assert.deepEqual(d.visibleProducts(products).map(p=>p.product_id),['b','a']);
+for (const url of ['javascript:alert(1)','data:text/html,x','https://user:pass@fixture.test','file:///tmp/a']) assert.equal(d.safeLink(url),null);
+assert.equal(d.safeLink('https://fixture.test/p'),'https://fixture.test/p');
+const history = [
+ {...latest,variant_id:'s',observation_id:1},
+ {...latest,variant_id:'m',observation_id:2},
+ {...latest,variant_id:'s',observation_id:3,price_currency:'USD'},
+ {...latest,variant_id:'s',observation_id:4,status:'unknown'},
+ {...latest,variant_id:'s',observation_id:5,unit_quantity:'2'},
+ {...latest,variant_id:'s',observation_id:6,price_amount:null},
+ {...latest,variant_id:'s',observation_id:7,observed_at:'2020-01-01T00:00:00Z'},
+ {...latest,variant_id:'s',observation_id:8,unit_quantity:'1.0000000000000000001'}
+];
+const state = d.deriveDashboardState({products,history}, {productId:'a',variantId:'s'});
+assert.equal(state.selectedVariantId,'s');
+assert.deepEqual(d.chartPoints(state,7).map(o=>o.observation_id),[1]);
+assert.equal(state.changes.length,0);
+assert.equal(d.formatMoney(null,'RUB'),'Цена неизвестна');
+assert.equal(d.formatMoney('1e9999','RUB'),'Цена неизвестна');
+assert.equal(d.formatMoney('1e-9999','RUB'),'Цена неизвестна');
+const same = d.deriveDashboardState({history:[{...latest,variant_id:'s',observation_id:1,price_amount:'10.0'}, {...latest,variant_id:'s',observation_id:2,price_amount:'10.00'}]});
+assert.equal(same.changes.length,0);
+for (const change of [{price_state:'unknown'},{observed_at:'not-a-date'}, {observed_at:'2099-01-01T00:00:00Z'}, {unit_quantity:'1.0000000000000000001'}, {price_amount:'1e-9999'}]) {
+ const invalid = d.deriveDashboardState({history:[{...latest,variant_id:'s',observation_id:1}, {...latest,...change,variant_id:'s',observation_id:2,price_amount:change.price_amount||'200'}]});
+ assert.equal(invalid.changes.length,0);
+}
+const equivalent = {...state, history:[{...latest,variant_id:'s',observation_id:1,unit_quantity:'1.000'}]};
+assert.equal(d.chartPoints(equivalent,7).length,1);
+
+""", encoding="utf-8")
+    result = subprocess.run(["node", str(script), str(Path("pricepulse/web/static/dashboard.js").resolve())], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr
+
+
+def test_dashboard_selection_races_and_failed_poll_keep_current_data(tmp_path):
+    script = tmp_path / "dashboard-races.cjs"
+    script.write_text("""
+const assert = require('node:assert/strict');
+const d = require(process.argv[2]);
+class Element {
+ constructor(){this.dataset={};this.children=[];this.events={};this.value='';this.hidden=false;}
+ append(...children){this.children.push(...children);} replaceChildren(...children){this.children=children;}
+ setAttribute(k,v){this[k]=v;} removeAttribute(k){delete this[k];}
+ addEventListener(k,v){this.events[k]=v;} scrollIntoView(){}
+}
+global.document={createElement:()=>new Element(),createElementNS:()=>new Element()};
+global.Option=class extends Element {constructor(t,v){super();this.textContent=t;this.value=v;}};
+const elements={};const root={querySelector:s=>(elements[s]||=new Element()),querySelectorAll:()=>[]};
+const products=['a','b'].map(id=>({product_id:id,title:id,variants:[{variant_id:id,attributes:{size:id}}]}));
+let pending=[];
+const loader=selection=>new Promise((resolve,reject)=>pending.push({selection,resolve,reject}));
+const make=(selection)=>d.deriveDashboardState({products,generated_at:new Date().toISOString(),totals:{products:2,variants:2,observations:1},history:[{variant_id:selection.variantId||'a',observation_id:1,status:'unknown'}]},selection);
+const tick=()=>new Promise(resolve=>setImmediate(resolve));
+(async()=>{
+ const c=d.createController(root,loader);
+ const first=c.refresh(); pending[0].resolve(make(pending[0].selection)); await first;
+ assert.equal(c.getState().selectedVariantId,'a');
+ let rows=elements['#products'].children;
+ rows[1].children[0].children[0].children[0].children[0].events.click();
+ rows=elements['#products'].children;
+ rows[0].children[0].children[0].children[0].children[0].events.click();
+ assert.equal(pending.length,3);
+ pending[2].resolve(make(pending[2].selection));await tick();
+ pending[1].resolve(make(pending[1].selection));await tick();
+ assert.equal(c.getState().selectedVariantId,'a');
+ const failed=c.refresh();pending[3].reject(new Error('offline'));await failed;
+ assert.equal(c.getState().selectedVariantId,'a');assert.equal(c.getState().products.length,2);
+ assert.equal(elements['#dashboard-error'].hidden,false);
+ elements['#search'].events.input({target:{value:'b'}});
+ assert.equal(elements['#products'].children.length,1);
+ const refresh=c.refresh(); pending[4].resolve(make(pending[4].selection));await refresh;
+ assert.equal(elements['#products'].children.length,1);
+ assert.equal(c.getState().selectedVariantId,'a');
+ const partial=c.refresh();pending[5].resolve({...make(pending[5].selection),history:[],historyError:true});await partial;
+ assert.equal(c.getState().history.length,1);assert.equal(c.getState().historyError,true);
+ assert.equal(elements['#history-warning'].hidden,false);
+ c.dispose();
+})().catch(error=>{process.stderr.write(error.stack);process.exit(1);});
+""", encoding="utf-8")
+    result = subprocess.run(["node", str(script), str(Path("pricepulse/web/static/dashboard.js").resolve())], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr

@@ -1,62 +1,76 @@
 <!doctype html>
-<html lang="en">
+<html lang="ru">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PricePulse dashboard</title>
+  <meta name="color-scheme" content="dark">
+  <title>PricePulse — каталог</title>
+  <link rel="icon" href="data:,">
   <link rel="stylesheet" href="/static/dashboard.css">
   <script src="/static/dashboard.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#dashboard-title">К содержимому</a>
+  <header class="masthead">
+    <a class="brand" href="/dashboard" aria-label="PricePulse — главная">pricepulse<span class="brand-slash" aria-hidden="true">/</span></a>
+    <nav class="app-navigation" aria-label="Разделы dashboard">
+      <a href="#catalog" class="nav-active">Каталог <span id="nav-count">—</span></a>
+      <a href="#analytics">История</a>
+      <a href="#collection">Сбор данных</a>
+      <a href="#notifications">События</a>
+    </nav>
+    <span class="environment">Локальная база</span>
+  </header>
   <main class="dashboard" aria-labelledby="dashboard-title">
-    <h1 id="dashboard-title">PricePulse dashboard</h1>
-    <p id="dashboard-state" class="dashboard-state" role="status" aria-live="polite">Loading persisted data…</p>
-    <div id="dashboard-error" class="dashboard-error" role="alert" aria-live="assertive" hidden>The dashboard could not load persisted data.</div>
-    <div id="dashboard-blocked" class="dashboard-blocked" role="status" aria-live="polite" hidden></div>
-
-    <section aria-labelledby="sources-heading" class="card">
-      <h2 id="sources-heading">Sources</h2>
-      <p id="sources-empty" class="empty-state" hidden>No owned sources are stored yet.</p>
-      <ul id="sources" class="data-list" aria-label="Persisted sources"></ul>
+    <header id="overview" class="page-header">
+      <div><p class="section-label">Цены и наличие</p><h1 id="dashboard-title">Каталог</h1></div>
+      <div class="header-actions"><label for="source-select">Источник</label><select id="source-select"><option value="">Все источники</option></select><button id="refresh">Обновить данные</button></div>
+    </header>
+    <div class="status-line"><span id="dashboard-state" role="status" aria-live="polite">Загрузка сохранённых данных…</span><span>Обновление каждые 30 сек</span></div>
+    <div id="dashboard-error" class="notice error" role="alert" hidden>Не удалось загрузить данные.</div>
+    <div id="dashboard-blocked" class="notice warning" role="status" hidden></div>
+    <div id="truncation" class="notice warning" hidden>Показана ограниченная выборка. Уточните источник; полная история доступна через экспорт.</div>
+    <div class="workspace">
+      <section id="catalog" class="catalog" aria-labelledby="products-heading">
+        <div class="catalog-heading"><h2 id="products-heading">Товары <span id="catalog-count" class="count-badge">—</span></h2><span class="catalog-hint">Выберите товар, чтобы посмотреть историю</span></div>
+        <dl class="catalog-summary" aria-label="Показатели каталога">
+          <div><dt>Товары</dt><dd id="metric-products">—</dd></div>
+          <div><dt>Варианты</dt><dd id="metric-variants">—</dd></div>
+          <div><dt>Наблюдения</dt><dd id="metric-observations">—</dd></div>
+          <div title="Варианты в загруженной выборке с изменением последней подтверждённой цены"><dt>Изменились</dt><dd id="metric-changes">—</dd></div>
+        </dl>
+        <div class="catalog-toolbar">
+          <label class="search-field"><span class="sr-only">Поиск по названию или артикулу</span><input id="search" type="search" placeholder="Название или артикул" autocomplete="off"></label>
+          <label class="sr-only" for="filter">Фильтр товаров</label><select id="filter"><option value="all">Все товары</option><option value="available">В наличии</option><option value="changed">Цена изменилась</option><option value="stale">Данные устарели</option></select>
+          <label class="sr-only" for="sort">Сортировка товаров</label><select id="sort"><option value="title">По названию</option><option value="fresh">Сначала свежие</option></select>
+        </div>
+        <div class="table-scroll"><table><thead><tr><th scope="col">Название / артикул</th><th scope="col">Цена</th><th scope="col">Изменения</th><th scope="col">Наличие</th><th scope="col">Наблюдение</th><th scope="col"><span class="sr-only">История</span></th></tr></thead><tbody id="products"></tbody></table></div>
+        <p id="products-empty" class="empty-state" hidden>Товары не найдены.</p>
+        <div class="table-footer"><span id="visible-count">—</span><span>Последние подтверждённые цены</span></div>
+      </section>
+      <section id="analytics" class="inspector" aria-labelledby="history-heading">
+        <div class="inspector-heading"><span class="section-label">Выбранный товар</span><a id="product-link" class="text-link" hidden target="_blank" rel="noopener noreferrer">Открыть в магазине ↗</a></div>
+        <h2 id="selected-title" class="selected-title">Выберите товар</h2>
+        <div class="price-line"><strong id="selected-price">—</strong><span id="selected-status" class="pill">Нет наблюдений</span></div>
+        <div class="variant-label">Вариант</div><div id="variant-options" class="variant-options" role="group" aria-label="Выбор варианта"></div>
+        <div class="chart-heading"><h3 id="history-heading">История цены</h3><div class="segmented" role="group" aria-label="Период графика"><button data-period="1">24 ч</button><button data-period="7" aria-pressed="true">7 дней</button><button data-period="30">30 дней</button></div></div>
+        <p id="history-warning" class="notice warning" role="status" hidden>История не обновлена; показаны последние загруженные наблюдения.</p>
+        <div id="chart" class="chart" aria-label="График сохранённых цен"></div><p id="history-empty" class="empty-state">Для выбранного варианта пока нет наблюдений.</p>
+        <div class="chart-footer"><span>Цена, <span id="chart-dimension">—</span></span><span id="history-count">—</span></div>
+        <div class="observations-heading"><h3>Наблюдения</h3><div class="exports"><a id="export-csv" hidden>CSV ↓</a><a id="export-json" hidden>JSON ↓</a></div></div>
+        <ul id="history" class="activity-list"></ul><p id="stale-empty" class="muted">Устаревших наблюдений в выборке нет.</p><p id="changes-empty" class="muted" hidden>Подтверждённых изменений цены нет.</p><ul id="changes" class="activity-list"></ul>
+      </section>
+    </div>
+    <section id="collection" class="collection-section" aria-labelledby="collection-heading">
+      <div class="section-heading"><h2 id="collection-heading">Сбор данных</h2><span class="section-label">Расписание и журнал</span></div>
+      <div class="collection-grid">
+        <div><h3>Источники</h3><p id="sources-empty" class="empty-state" hidden>Источники ещё не добавлены.</p><div id="sources" class="source-cards"></div></div>
+        <div><h3>Последние запуски <span class="muted">/ до 20</span></h3><p id="jobs-empty" class="empty-state" hidden>Запусков сбора пока нет.</p><ul id="jobs" class="activity-list"></ul></div>
+        <div id="notifications"><h3>Уведомления <span id="alert-count" class="count-badge">—</span></h3><p id="alerts-empty" class="empty-state" hidden>Уведомлений пока нет.</p><ul id="alerts" class="activity-list"></ul><h3 class="quality-heading">Качество данных <span id="quality-count" class="count-badge">—</span></h3><p id="quality-empty" class="empty-state" hidden>Сохранённых замечаний нет.</p><ul id="quality" class="activity-list"></ul></div>
+      </div>
     </section>
-
-    <section aria-labelledby="products-heading" class="card">
-      <h2 id="products-heading">Products</h2>
-      <p id="products-empty" class="empty-state" hidden>No products are stored yet.</p>
-      <ul id="products" class="data-list" aria-label="Persisted products"></ul>
-    </section>
-
-    <section aria-labelledby="history-heading" class="card">
-      <h2 id="history-heading">Selected product history</h2>
-      <p id="history-empty" class="empty-state" hidden>No observations are stored for the selected product.</p>
-      <p id="stale-empty" class="empty-state" hidden>No stale observations are available.</p>
-      <ul id="history" class="data-list" aria-label="Product price history"></ul>
-    </section>
-
-    <section aria-labelledby="changes-heading" class="card">
-      <h2 id="changes-heading">Price changes</h2>
-      <p id="changes-empty" class="empty-state" hidden>At least two observations are required to show a price change.</p>
-      <ul id="changes" class="data-list" aria-label="Persisted price changes"></ul>
-    </section>
-
-    <section aria-labelledby="jobs-heading" class="card">
-      <h2 id="jobs-heading">Job states</h2>
-      <p id="jobs-empty" class="empty-state" hidden>No collection jobs are stored yet.</p>
-      <ul id="jobs" class="data-list" aria-label="Persisted collection jobs"></ul>
-    </section>
-
-    <section aria-labelledby="quality-heading" class="card">
-      <h2 id="quality-heading">Quality issues</h2>
-      <p id="quality-empty" class="empty-state" hidden>No persisted quality issues are available.</p>
-      <ul id="quality" class="data-list" aria-label="Persisted quality issues"></ul>
-    </section>
-
-    <section aria-labelledby="alerts-heading" class="card">
-      <h2 id="alerts-heading">Alerts</h2>
-      <p id="alerts-empty" class="empty-state" hidden>No persisted alert events are available.</p>
-      <ul id="alerts" class="data-list" aria-label="Persisted alert events"></ul>
-    </section>
+    <footer class="page-footer"><span>PricePulse</span><span>Время указано в часовом поясе браузера</span></footer>
   </main>
-  <noscript>This dashboard requires JavaScript to load data from the local API.</noscript>
+  <noscript>Для работы dashboard включите JavaScript.</noscript>
 </body>
 </html>

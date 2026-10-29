@@ -326,7 +326,7 @@ def test_dashboard_and_static_files_are_served(server):
     status, content_type, body = request(f"{server.url}/dashboard")
     assert status == 200
     assert content_type == "text/html; charset=utf-8"
-    assert b"Loading persisted data" in body
+    assert "Загрузка сохранённых данных" in body.decode("utf-8")
     assert request(f"{server.url}")[0] == 200
 
     for filename, content_type, marker in (
