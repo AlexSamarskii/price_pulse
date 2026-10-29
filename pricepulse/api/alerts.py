@@ -156,11 +156,12 @@ class AlertService:
                             continue
                         delta_amount = str(delta)
                         delta_currency = rule["currency"]
-                        if int(rule["cooldown_seconds"]) == 0:
-                            cooldown_bucket = "once"
-                        else:
-                            cooldown_bucket = str(int(datetime.fromisoformat(evaluation_time).timestamp()) // int(rule["cooldown_seconds"]))
-                        dedupe_key = f"{rule['rule_id']}:{variant_id}:{row['observation_id']}:{delta}:{cooldown_bucket}"
+                        dedupe_key = f"{rule['rule_id']}:{variant_id}:{row['observation_id']}:{delta}"
+                    if connection.execute(
+                        "SELECT 1 FROM alert_events WHERE rule_id = ? AND variant_id = ? AND observation_id = ?",
+                        (rule["rule_id"], variant_id, row["observation_id"]),
+                    ).fetchone() is not None:
+                        continue
                     if connection.execute(
                         "SELECT 1 FROM alert_events WHERE dedupe_key = ?", (dedupe_key,),
                     ).fetchone() is not None:

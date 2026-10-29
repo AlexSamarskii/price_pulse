@@ -95,6 +95,8 @@ class DataRepository:
                     policy.updated_at,
                 ),
             )
+            connection.execute("UPDATE sources SET current_policy_id = ? WHERE source_id = ?",
+                               (policy.policy_id, policy.source_id))
 
     def upsert_scraper_version(self, version: ScraperVersion) -> None:
         with self.database.transaction() as connection:
@@ -181,8 +183,13 @@ class DataRepository:
                 ),
             )
 
-    def activate_scraper_version(self, version_id: str) -> bool:
+    def activate_scraper_version(self, version_id: str, *, job_id: str | None = None, lease_owner: str | None = None,
+                                collection_config: str | None = None) -> bool:
         with self.database.transaction() as connection:
+            if job_id is not None:
+                self._require_lease(connection, job_id, lease_owner)
+                if collection_config is not None:
+                    self._require_collection(connection, job_id, version_id, collection_config)
             version = connection.execute(
                 """
                 SELECT source_id, status, fixture_verification
@@ -193,6 +200,10 @@ class DataRepository:
             ).fetchone()
             if version is None or version["status"] != "validated" or version["fixture_verification"] != "passed":
                 return False
+            if job_id is not None and connection.execute(
+                "SELECT source_id FROM collection_jobs WHERE job_id = ?", (job_id,)
+            ).fetchone()[0] != version["source_id"]:
+                raise ValueError("job does not belong to scraper source")
             connection.execute(
                 "UPDATE scraper_versions SET status = 'validated' WHERE source_id = ? AND status = 'active'",
                 (version["source_id"],),
@@ -247,7 +258,7 @@ class DataRepository:
         with self.database.transaction() as connection:
             row = connection.execute(
                 """
-                SELECT status, attempts, retry_budget, lease_expires_at
+                SELECT source_id, status, attempts, retry_budget, lease_expires_at
                 FROM collection_jobs
                 WHERE job_id = ?
                 """,
@@ -259,6 +270,18 @@ class DataRepository:
             expired = bool(row["lease_expires_at"] and row["lease_expires_at"] <= now)
             claimable = row["status"] == "queued" or (row["status"] == "running" and expired)
             if not claimable or attempts >= budget:
+                return JobClaim(job_id, attempts, False)
+            configured = connection.execute(
+                "SELECT config_json, retry_after FROM collection_sources WHERE source_id = ?", (row["source_id"],),
+            ).fetchone()
+            if configured is not None and (
+                not json.loads(configured["config_json"])["enabled"] or configured["retry_after"] > now
+            ):
+                return JobClaim(job_id, attempts, False)
+            if configured is not None and connection.execute(
+                "SELECT 1 FROM collection_jobs WHERE source_id = ? AND job_id != ? AND status = 'running' "
+                "AND (lease_expires_at IS NULL OR lease_expires_at > ?)", (row["source_id"], job_id, now),
+            ).fetchone() is not None:
                 return JobClaim(job_id, attempts, False)
             updated = connection.execute(
                 """
@@ -324,8 +347,15 @@ class DataRepository:
         *,
         job_id: str | None = None,
         ingested_at: str | None = None,
+        lease_owner: str | None = None,
+        collection_config: str | None = None,
+        collection_version_id: str | None = None,
     ) -> PersistenceResult:
         with self.database.transaction() as connection:
+            if lease_owner is not None:
+                self._require_lease(connection, job_id, lease_owner)
+                if collection_config is not None:
+                    self._require_collection(connection, job_id, collection_version_id, collection_config)
             if job_id is not None:
                 job = connection.execute(
                     "SELECT source_id FROM collection_jobs WHERE job_id = ?", (job_id,)
@@ -438,6 +468,31 @@ class DataRepository:
                 ),
             )
             return PersistenceResult(product_id, variant_id, int(cursor.lastrowid), "created")
+
+    @staticmethod
+    def _require_lease(connection, job_id: str | None, owner: str | None) -> None:
+        now = datetime.now(timezone.utc).isoformat(timespec="milliseconds")
+        row = connection.execute(
+            "SELECT 1 FROM collection_jobs WHERE job_id = ? AND status = 'running' "
+            "AND lease_owner = ? AND lease_expires_at > ?", (job_id, owner, now),
+        ).fetchone()
+        if row is None:
+            raise PermissionError("operation requires the active unexpired job lease")
+
+    @staticmethod
+    def _require_collection(connection, job_id, version_id, config_json):
+        row = connection.execute(
+            """SELECT cs.version_id, cs.config_json, cs.retry_after, p.policy_digest, v.policy_digest AS version_policy
+               FROM collection_jobs AS j JOIN collection_sources AS cs ON cs.source_id = j.source_id
+               JOIN sources AS s ON s.source_id = j.source_id
+               JOIN source_policies AS p ON p.policy_id = s.current_policy_id
+               JOIN scraper_versions AS v ON v.version_id = cs.version_id
+               WHERE j.job_id = ?""", (job_id,),
+        ).fetchone()
+        if (row is None or row["version_id"] != version_id or row["config_json"] != config_json
+                or not json.loads(row["config_json"])["enabled"] or row["policy_digest"] != row["version_policy"]
+                or row["retry_after"] > datetime.now(timezone.utc).isoformat(timespec="milliseconds")):
+            raise PermissionError("collection configuration or policy changed while job was running")
 
     def previous_price(self, variant_id: str, observed_at: str, currency: str | None) -> PriceField:
         connection = self.database.connection

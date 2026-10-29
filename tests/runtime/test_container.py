@@ -10,6 +10,29 @@ from pricepulse.runtime import ExecutionRequest, RuntimeUnavailableError, Sandbo
 from pricepulse.runtime.settings import RuntimeSettings
 
 
+def test_separate_capture_input_is_bounded_and_reusable(runtime_runner):
+    import json
+    from pricepulse.runtime.protocol import MAX_INPUT_BYTES, ProtocolError
+
+    code = b"from pathlib import Path\nprint(Path('input.json').read_text())"
+    for value in ("first capture", "second capture"):
+        request = ExecutionRequest(job_id="capture-input", script=code, env={}, timeout_seconds=10,
+                                   input_data=json.dumps({"data": value}).encode())
+        assert ExecutionRequest.from_payload(request.to_payload()).input_data == request.input_data
+        result = runtime_runner.run(request)
+        assert result.status == "completed" and result.exit_code == 0 and result.cleanup_completed
+        assert json.loads(result.stdout) == {"data": value}
+    with pytest.raises(ProtocolError, match="capture exceeds"):
+        ExecutionRequest(job_id="oversize", script=code, env={}, timeout_seconds=10,
+                         input_data=b"x" * (MAX_INPUT_BYTES + 1))
+    large = ExecutionRequest(job_id="large-capture", env={}, timeout_seconds=10,
+        script=b"from pathlib import Path\nprint(len(Path('input.json').read_bytes()))",
+        input_data=b"x" * (MAX_INPUT_BYTES - 64))
+    result = runtime_runner.run(large)
+    assert result.status == "completed" and result.exit_code == 0 and result.cleanup_completed
+    assert int(result.stdout.strip()) == MAX_INPUT_BYTES - 64
+
+
 def execute(
     runner: SandboxedContainerRunner,
     script: str,

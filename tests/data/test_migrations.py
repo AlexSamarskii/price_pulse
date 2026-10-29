@@ -9,7 +9,8 @@ from pricepulse.data.store import Database
 def test_initial_migration_upgrades_and_rolls_back():
     connection = sqlite3.connect(":memory:")
     try:
-        assert apply_migrations(connection) == ["0001"]
+        assert apply_migrations(connection) == ["0001", "0002"]
+        assert connection.execute("SELECT 1 FROM collection_sources").fetchall() == []
         assert connection.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='observations'"
         ).fetchone()
@@ -19,6 +20,8 @@ def test_initial_migration_upgrades_and_rolls_back():
         )
         with pytest.raises(sqlite3.IntegrityError):
             connection.execute("DELETE FROM observations")
+        assert rollback_migrations(connection) == "0002"
+        assert connection.execute("SELECT COUNT(*) FROM observations").fetchone()[0] == 1
         assert rollback_migrations(connection) == "0001"
         assert connection.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='observations'"
@@ -30,6 +33,13 @@ def test_initial_migration_upgrades_and_rolls_back():
 def test_database_rollback_latest_rolls_back(tmp_path):
     with Database(tmp_path / "migration-lifecycle.db") as database:
         database.initialize()
+        assert database.connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='observations'"
+        ).fetchone()
+        database.rollback_latest()
+        assert database.connection.execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='collection_sources'"
+        ).fetchone() is None
         assert database.connection.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='observations'"
         ).fetchone()

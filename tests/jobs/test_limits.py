@@ -238,7 +238,21 @@ def test_alert_cooldown_and_idempotency(tmp_path):
     third = service.evaluate()
     assert first["evaluated"] == 2 and first["created"] == 1
     assert second["created"] == 0
-    assert third["created"] == 1
+    assert third["created"] == 0
+    with Database(path) as database:
+        assert database.connection.execute(
+            "SELECT COUNT(*) FROM alert_events WHERE rule_id = 'price-drop' AND variant_id = ?", (variant_id,),
+        ).fetchone()[0] == 1
+        DataRepository(database).persist_normalized(NormalizedProduct(
+            source_id="limited", identity_key="same", title="Product", canonical_url="https://fixture.test/p/1",
+            variant_key="variant", sku="SKU", attributes={}, packaging={"unit_name": "piece", "quantity": "1"},
+            unit_name="piece", unit_quantity=Decimal("1"), sale_price=PriceField("present", Decimal("18.00"), "RUB", 2),
+            list_price=PriceField("present", Decimal("18.00"), "RUB", 2),
+            unit_price=PriceField("present", Decimal("18.00"), "RUB", 2), availability=Availability.AVAILABLE,
+            observed_at="2026-01-04T00:00:00.000+00:00", evidence={}, raw_hash="new-confirmed-transition",
+        ))
+    assert service.evaluate()["created"] == 1
+    assert AlertService(path).evaluate()["created"] == 0
     with Database(path) as database:
         count = database.connection.execute(
             "SELECT COUNT(*) FROM alert_events WHERE rule_id = 'price-drop' AND variant_id = ?",

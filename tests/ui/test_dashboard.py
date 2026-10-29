@@ -272,6 +272,32 @@ def test_dashboard_state_is_derived_from_persisted_fixture(tmp_path: Path, dashb
     assert any("Live collection is disabled" in message for message in state["blocked"])
 
 
+def test_dashboard_polling_refreshes_without_overlapping_loads(tmp_path):
+    script = tmp_path / "poll-dashboard.cjs"
+    script.write_text("""
+const assert = require('node:assert/strict');
+const dashboard = require(process.argv[2]);
+let callback, milliseconds, calls = 0, release;
+const loader = () => { calls += 1; return new Promise(resolve => { release = resolve; }); };
+const timer = (fn, delay) => { callback = fn; milliseconds = delay; return 42; };
+(async () => {
+  assert.equal(dashboard.startPolling({}, loader, timer), 42);
+  assert.equal(milliseconds, 30000);
+  assert.equal(calls, 1);
+  await callback();
+  assert.equal(calls, 1);
+  release();
+  await new Promise(resolve => setImmediate(resolve));
+  callback();
+  assert.equal(calls, 2);
+  release();
+})().catch(error => { process.stderr.write(String(error)); process.exit(1); });
+""", encoding="utf-8")
+    result = subprocess.run(["node", str(script), str(Path("pricepulse/web/static/dashboard.js").resolve())],
+                            capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr
+
+
 def _render(tmp_path: Path, dashboard_input: dict) -> dict:
     input_path = tmp_path / "dashboard-render-input.json"
     input_path.write_text(json.dumps(dashboard_input), encoding="utf-8")

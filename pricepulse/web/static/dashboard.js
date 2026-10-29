@@ -245,7 +245,22 @@
     });
   }
 
-  const exposed = { deriveDashboardState, formatMoney, loadDashboardData, renderDashboard };
+  function startPolling(root, loader, timer) {
+    let loading = false;
+    const refresh = async () => {
+      if (loading) return;
+      loading = true;
+      try {
+        await initDashboard(root, loader);
+      } finally {
+        loading = false;
+      }
+    };
+    refresh();
+    return (timer || window.setInterval)(refresh, 30000);
+  }
+
+  const exposed = { deriveDashboardState, formatMoney, loadDashboardData, renderDashboard, startPolling };
   if (typeof module !== "undefined" && module.exports) {
     module.exports = exposed;
   }
@@ -253,7 +268,10 @@
     window.pricepulseDashboard = exposed;
     window.addEventListener("DOMContentLoaded", () => {
       const root = document.querySelector("main.dashboard");
-      if (root) initDashboard(root);
+      if (root) {
+        const timer = startPolling(root);
+        window.addEventListener("pagehide", () => window.clearInterval(timer), { once: true });
+      }
     });
   }
 })();

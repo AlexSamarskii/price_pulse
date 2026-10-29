@@ -12,6 +12,7 @@ JOB_ID_RE = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]{0,127}$")
 ENV_KEY_RE = re.compile(r"^[A-Z_][A-Z0-9_]{0,127}$")
 ALLOWED_ENV_KEY_RE = re.compile(r"^PRICEPULSE_JOB_[A-Z0-9_]{1,100}$")
 MAX_SCRIPT_BYTES = 1_000_000
+MAX_INPUT_BYTES = 2_500_000
 MAX_ENV_BYTES = 32_768
 MAX_TIMEOUT_SECONDS = 120.0
 MAX_OUTPUT_BYTES = 4_000_000
@@ -32,6 +33,7 @@ class ExecutionRequest:
     pids_limit: int = 32
     output_limit_bytes: int = 65_536
     workspace_limit_bytes: int = 4_000_000
+    input_data: bytes = b""
 
     def __post_init__(self) -> None:
         if not JOB_ID_RE.fullmatch(self.job_id):
@@ -40,6 +42,8 @@ class ExecutionRequest:
             raise ProtocolError("script must not be empty")
         if len(self.script) > MAX_SCRIPT_BYTES:
             raise ProtocolError("script exceeds the input limit")
+        if not isinstance(self.input_data, bytes) or len(self.input_data) > MAX_INPUT_BYTES:
+            raise ProtocolError("capture exceeds the input limit")
         if not 0.1 <= self.timeout_seconds <= MAX_TIMEOUT_SECONDS:
             raise ProtocolError("timeout_seconds is out of range")
         if not 0.05 <= self.cpu_limit <= 4:
@@ -72,6 +76,7 @@ class ExecutionRequest:
             "env": dict(self.env),
             "timeout_seconds": self.timeout_seconds,
             "output_limit_bytes": self.output_limit_bytes,
+            "input_b64": base64.b64encode(self.input_data).decode("ascii"),
         }
 
     @classmethod
@@ -80,6 +85,7 @@ class ExecutionRequest:
             raise ProtocolError("payload must be an object")
         try:
             script = base64.b64decode(payload["script_b64"], validate=True)
+            input_data = base64.b64decode(payload.get("input_b64", ""), validate=True)
             env = payload["env"]
         except (KeyError, TypeError, binascii.Error) as exc:
             raise ProtocolError("payload is malformed") from exc
@@ -96,6 +102,7 @@ class ExecutionRequest:
             env=env,
             timeout_seconds=timeout,
             output_limit_bytes=output_limit,
+            input_data=input_data,
         )
 
 

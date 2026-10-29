@@ -78,7 +78,7 @@ class SandboxedContainerRunner:
             "--ulimit",
             "nofile=32:32",
             "--ulimit",
-            "fsize=1048576",
+            f"fsize={max(1048576, len(request.input_data))}",
         ]
         for key, value in request.env.items():
             arguments.extend(["--env", f"{key}={value}"])

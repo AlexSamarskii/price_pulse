@@ -84,8 +84,8 @@ class JobManager:
 
                 policy = connection.execute(
                     """
-                    SELECT policy_json FROM source_policies
-                    WHERE source_id = ? ORDER BY created_at DESC, policy_id DESC LIMIT 1
+                    SELECT p.policy_json FROM sources AS s JOIN source_policies AS p ON p.policy_id = s.current_policy_id
+                    WHERE s.source_id = ?
                     """,
                     (source_id,),
                 ).fetchone()
@@ -207,8 +207,9 @@ class JobManager:
                 ready_at = parse_utc(row["updated_at"]) + timedelta(seconds=int(row["backoff_seconds"]))
                 if ready_at <= current:
                     database.connection.execute(
-                        "UPDATE collection_jobs SET status = 'queued', updated_at = ? WHERE job_id = ?",
-                        (now, row["job_id"]),
+                        "UPDATE collection_jobs SET status = 'queued', updated_at = ? WHERE job_id = ? "
+                        "AND status = 'failed' AND updated_at = ? AND attempts < retry_budget",
+                        (now, row["job_id"], row["updated_at"]),
                     )
             claim = DataRepository(database).claim_job(job_id, owner, expires, now)
             if not claim.claimed:

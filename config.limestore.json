@@ -1,0 +1,26 @@
+{
+  "sources": [
+    {
+      "adapter": "limestore",
+      "enabled": true,
+      "catalog_urls": ["https://limestore.com/ru_ru/catalog/women_new"],
+      "interval_seconds": 1800,
+      "cooldown_seconds": 1800,
+      "max_products": 8,
+      "max_catalog_pages": 2,
+      "policy": {
+        "source_id": "limestore_ru",
+        "base_url": "https://limestore.com/ru_ru/catalog/women_new",
+        "allowed_hosts": ["limestore.com"],
+        "allowed_path_prefixes": ["/ru_ru/catalog/women_new", "/ru_ru/product/", "/robots.txt"],
+        "robots_policy": "honor",
+        "max_pages": 10,
+        "requests_per_minute": 6,
+        "max_concurrency": 1,
+        "timeout_seconds": 15,
+        "allowed_currencies": ["RUB"],
+        "live_enabled": true
+      }
+    }
+  ]
+}

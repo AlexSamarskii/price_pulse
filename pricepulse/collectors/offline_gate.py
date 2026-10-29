@@ -87,6 +87,7 @@ def run_offline_gate(
     *,
     job_id: str,
     timeout_seconds: float = 10.0,
+    input_data: bytes = b"",
 ) -> OfflineGateResult:
     _verify_version_identity(version)
     code = version["code"]
@@ -111,6 +112,8 @@ def run_offline_gate(
         script=code.encode("utf-8"),
         env={"PRICEPULSE_JOB_POLICY_DIGEST": str(version.get("policy_digest", ""))},
         timeout_seconds=timeout_seconds,
+        input_data=input_data,
+        output_limit_bytes=262144 if input_data else 65536,
     )
     try:
         execution = runner.run(request)
@@ -130,7 +133,7 @@ def run_offline_gate(
             reason=str(exc),
             execution=execution,
         )
-    if execution.status != "completed":
+    if execution.status != "completed" or execution.exit_code != 0 or execution.error or not execution.cleanup_completed:
         return OfflineGateResult(
             status="failed",
             products=(),

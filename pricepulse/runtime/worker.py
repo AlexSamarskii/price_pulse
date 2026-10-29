@@ -12,11 +12,14 @@ from typing import IO
 from pricepulse.runtime.protocol import (
     ExecutionRequest,
     MAX_OUTPUT_BYTES,
+    MAX_INPUT_BYTES,
+    MAX_SCRIPT_BYTES,
+    MAX_ENV_BYTES,
     ProtocolError,
 )
 
 
-MAX_REQUEST_BYTES = 1_200_000
+MAX_REQUEST_BYTES = 4 * ((MAX_SCRIPT_BYTES + MAX_INPUT_BYTES + 2) // 3) + MAX_ENV_BYTES * 6 + 4096
 
 
 def _read_stream(stream: IO[bytes], limit: int, process: subprocess.Popen[bytes]) -> tuple[bytes, bool]:
@@ -45,6 +48,8 @@ def _run_generated_code(request: ExecutionRequest) -> dict[str, object]:
         script_path = os.path.join(workspace, "generated.py")
         with open(script_path, "wb") as script_file:
             script_file.write(request.script)
+        with open(os.path.join(workspace, "input.json"), "wb") as input_file:
+            input_file.write(request.input_data)
 
         environment = {
             "PATH": "/usr/bin:/bin",

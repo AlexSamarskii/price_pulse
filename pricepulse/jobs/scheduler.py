@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from pricepulse.data.store import Database
-from pricepulse.jobs.manager import JobManager
+from pricepulse.jobs.manager import JobManager, JobLimitExceeded
 
 
 class JobScheduler:
@@ -18,24 +18,37 @@ class JobScheduler:
             rows = database.connection.execute(
                 """
                 SELECT s.schedule_id, s.source_id, s.schedule, s.max_concurrency,
-                       s.requests_per_minute, src.active_version_id
+                       s.requests_per_minute, src.active_version_id,
+                       cs.version_id AS collection_version_id, cs.retry_after, cs.config_json
                 FROM schedules AS s
                 JOIN sources AS src ON src.source_id = s.source_id
+                LEFT JOIN collection_sources AS cs ON cs.source_id = s.source_id
                 WHERE s.enabled = 1
                 """,
             ).fetchall()
         due: list[dict[str, Any]] = []
         for row in rows:
+            if row["config_json"] is not None and (
+                not json.loads(row["config_json"])["enabled"]
+                or (row["retry_after"] and current < datetime.fromisoformat(row["retry_after"]))
+            ):
+                continue
             schedule = self._parse_interval(row["schedule"])
             schedule_id = row["schedule_id"]
             if schedule is None or current < self._next_run(schedule_id, row["source_id"], schedule):
                 continue
             idempotency_key = f"schedule:{schedule_id}:{self._bucket(current, schedule)}"
-            job_result = JobManager(self.database_path).start_job(
-                source_id=row["source_id"],
-                idempotency_key=idempotency_key,
-                scraper_version_id=row["active_version_id"],
-            )
+            active = row["active_version_id"]
+            if row["collection_version_id"] and row["collection_version_id"] != active:
+                active = None
+            try:
+                job_result = JobManager(self.database_path).start_job(
+                    source_id=row["source_id"], idempotency_key=idempotency_key, scraper_version_id=active,
+                )
+            except JobLimitExceeded:
+                if row["collection_version_id"] is None:
+                    raise
+                continue
             due.append(
                 {
                     "schedule_id": schedule_id,
